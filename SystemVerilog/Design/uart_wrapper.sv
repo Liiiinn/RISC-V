@@ -39,6 +39,7 @@ module uart_wrapper (
         if (io_data_valid) begin
             byte_address_next = byte_address + 1;
             byte_counter_next = byte_counter + 1;
+
             if (byte_counter == 3) begin
                 data_valid_next = 1;
             end
@@ -49,7 +50,6 @@ module uart_wrapper (
         end
     end
 
-    // io_packet包装成32位数据
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             data_out <= 0;
@@ -61,13 +61,9 @@ module uart_wrapper (
 
     always_comb begin
         data_out_next = data_out;
-        case (byte_counter)
-            0: data_out_next = {data_out[31:8], io_data_packet};
-            1: data_out_next = {data_out[31:16], io_data_packet, data_out[7:0]};
-            2: data_out_next = {data_out[31:24],  io_data_packet, data_out[15:0]};
-            3: data_out_next = {io_data_packet, data_out[23:0]};
-            default: data_out_next = 0;
-        endcase
+        if (io_data_valid) begin
+            data_out_next = {io_data_packet,data_out[31:8]};
+        end
     end
 
     uart uart_inst (
