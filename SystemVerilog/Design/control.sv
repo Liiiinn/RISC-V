@@ -18,7 +18,7 @@ module control(
     localparam logic [9:0] BEQ_INSTRUCTION = {3'b000, 7'b1100011};
     
     
-    always_comb begin
+    always_comb begin //分析insruction的内容，设置control
         control = '0;
         
         case (instruction.opcode)
@@ -40,6 +40,16 @@ module control(
                 control.reg_write = 1'b1;
                 control.alu_src = 1'b1;              
             end
+
+            7'b1100111: begin //JALR
+                control.encoding = I_TYPE;
+                control.is_branch = 1'b1;
+            end
+
+            7'b1101111: begin  //JAL
+                control.encoding = J_TYPE; //其他待补充
+                control.is_branch = 1'b1;
+            end
             
             7'b0100011: begin
                 control.encoding = S_TYPE;
@@ -49,7 +59,7 @@ module control(
             
             7'b1100011: begin
                 control.encoding = B_TYPE;
-                control.is_branch = 1'b1;            
+                control.is_branch = 1'b1;
             end
         endcase
         
