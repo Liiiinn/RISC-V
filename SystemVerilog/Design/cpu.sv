@@ -5,7 +5,8 @@ import common::*;
 
 module cpu(
     input clk,
-    input reset_n
+    input reset_n,
+    input io_rx
 );
 
     logic [31:0] program_mem_address = 0;
@@ -29,7 +30,9 @@ module cpu(
     
     logic [5:0] wb_reg_rd_id;
     logic [31:0] wb_result;
-    logic wb_write_back_en;    
+    logic wb_write_back_en;
+
+    logic pc_src;
     
     if_id_type if_id_reg;
     id_ex_type id_ex_reg;
@@ -46,7 +49,7 @@ module cpu(
         end
         else begin
             if_id_reg.pc <= program_mem_address;
-            if_id_reg.instruction <= program_mem_read_data;
+            if_id_reg.instruction <= program_mem_read_data;  //发生了类型转换
             
             id_ex_reg.reg_rd_id <= decode_reg_rd_id;
             id_ex_reg.data1 <= decode_data1;
@@ -69,7 +72,7 @@ module cpu(
 
     program_memory inst_mem(
         .clk(clk),        
-        .byte_address(program_mem_address),
+        .byte_address(program_mem_address),//加assign选择from pc or from uart
         .write_enable(program_mem_write_enable),
         .write_data(program_mem_write_data),
         .read_data(program_mem_read_data)
@@ -80,7 +83,8 @@ module cpu(
         .clk(clk), 
         .reset_n(reset_n),
         .address(program_mem_address),
-        .data(program_mem_read_data)
+        .data(program_mem_read_data),
+        .pc_src(pc_src)
     );
     
     
@@ -109,7 +113,8 @@ module cpu(
         .control_in(id_ex_reg.control),
         .control_out(execute_control),
         .alu_data(execute_alu_data),
-        .memory_data(execute_memory_data)          
+        .memory_data(execute_memory_data),
+        .pc_src(pc_src)
     );
     
     

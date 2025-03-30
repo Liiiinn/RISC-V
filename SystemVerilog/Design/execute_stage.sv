@@ -12,7 +12,8 @@ module execute_stage(
     input control_type control_in,
     output control_type control_out,
     output logic [31:0] alu_data,
-    output logic [31:0] memory_data
+    output logic [31:0] memory_data,
+    output logic pc_src
 );
 
     logic zero_flag;
@@ -40,5 +41,6 @@ module execute_stage(
     
     assign control_out = control_in;
     assign memory_data = data2;
+    assign pc_src = zero_flag & control_in.is_branch;
     
 endmodule
