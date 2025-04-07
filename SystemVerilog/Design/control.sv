@@ -22,47 +22,59 @@ module control(
         control = '0;
         
         case (instruction.opcode)
+            //RV32I
+            //R type, SLL, SRL, SRA, ADD, SUB, XOR, OR, AND, SLT, SLTU
             7'b0110011: begin
                 control.encoding = R_TYPE;
                 control.reg_write = 1'b1;
             end
-            
-            7'b0000011: begin
-                control.encoding = I_TYPE;
-                control.reg_write = 1'b1;
-                control.alu_src = 1'b1;                
-                control.mem_read = 1'b1;                
-                control.mem_to_reg = 1'b1;                 
-            end
-            
+            //I type, SLLI, SRLI, SRAI, ADDI, XORI, ORI, ANDI, SLTI, SLTIU
             7'b0010011: begin
                 control.encoding = I_TYPE;
                 control.reg_write = 1'b1;
-                control.alu_src = 1'b1;              
+                control.alu_src = 1'b1;
             end
-
-            7'b1100111: begin //JALR
+            //I type, LB, LH, LBU, LHU, LW
+            7'b0000011: begin
+                control.encoding = I_TYPE;
+                control.reg_write = 1'b1;
+                control.alu_src = 1'b1;
+                control.mem_read = 1'b1;
+                control.mem_to_reg = 1'b1;
+            end
+            //I type, JALR
+            7'b1100111: begin
                 control.encoding = I_TYPE;
                 control.is_branch = 1'b1;
             end
-
-            7'b1101111: begin  //JAL
-                control.encoding = J_TYPE; //其他待补充
+            //J type, JAL
+            7'b1101111: begin
+                control.encoding = J_TYPE;
                 control.is_branch = 1'b1;
             end
-            
+            //S type, SB, SH, SW
             7'b0100011: begin
                 control.encoding = S_TYPE;
                 control.alu_src = 1'b1;
-                control.mem_write = 1'b1;                  
+                control.mem_write = 1'b1;
             end
-            
+            //B type, BEQ, BNE, BLT, BGE, BLTU, BGEU
             7'b1100011: begin
                 control.encoding = B_TYPE;
                 control.is_branch = 1'b1;
             end
+            //U type, LUI
+            7'b0110111: begin
+                control.encoding = U_TYPE;
+                control.reg_write = 1'b1;
+            end
+            //U type, AUIPC
+            7'b0010111: begin
+                control.encoding = U_TYPE;
+                control.reg_write = 1'b1;
+            end
         endcase
-        
+
         control.alu_op = ALU_ADD;
         if ({instruction.funct7, instruction.funct3, instruction.opcode} == ADD_INSTRUCTION) begin
             control.alu_op = ALU_ADD;
