@@ -46,11 +46,13 @@ module control(
             7'b1100111: begin
                 control.encoding = I_TYPE;
                 control.is_branch = 1'b1;
+                control.reg_write = 1'b1;
             end
             //J type, JAL
             7'b1101111: begin
                 control.encoding = J_TYPE;
                 control.is_branch = 1'b1;
+                control.reg_write = 1'b1;
             end
             //S type, SB, SH, SW
             7'b0100011: begin
