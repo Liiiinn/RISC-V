@@ -32,7 +32,7 @@ module execute_stage(
     
     
     alu inst_alu(
-        .control(ALU_ADD),
+        .control(control_in.alu_op),
         .left_operand(left_operand), 
         .right_operand(right_operand),
         .zero_flag(zero_flag),
