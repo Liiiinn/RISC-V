@@ -12,67 +12,14 @@ module control(
     
     always_comb begin
         control = '0;
-        
-        case (instruction.opcode)
-            //RV32I
-            //R type, SLL, SRL, SRA, ADD, SUB, XOR, OR, AND, SLT, SLTU
-            7'b0110011: begin
-                control.encoding = R_TYPE;
-                control.reg_write = 1'b1;
-            end
-            //I type, SLLI, SRLI, SRAI, ADDI, XORI, ORI, ANDI, SLTI, SLTIU
-            7'b0010011: begin
-                control.encoding = I_TYPE;
-                control.reg_write = 1'b1;
-                control.alu_src = 1'b1;
-            end
-            //I type, LB, LH, LBU, LHU, LW
-            7'b0000011: begin
-                control.encoding = I_TYPE;
-                control.reg_write = 1'b1;
-                control.alu_src = 1'b1;
-                control.mem_read = 1'b1;
-                control.mem_to_reg = 1'b1;
-            end
-            //I type, JALR
-            7'b1100111: begin
-                control.encoding = I_TYPE;
-                control.is_branch = 1'b1;
-                control.reg_write = 1'b1;
-            end
-            //J type, JAL
-            7'b1101111: begin
-                control.encoding = J_TYPE;
-                control.is_branch = 1'b1;
-                control.reg_write = 1'b1;
-            end
-            //S type, SB, SH, SW
-            7'b0100011: begin
-                control.encoding = S_TYPE;
-                control.alu_src = 1'b1;
-                control.mem_write = 1'b1;
-            end
-            //B type, BEQ, BNE, BLT, BGE, BLTU, BGEU
-            7'b1100011: begin
-                control.encoding = B_TYPE;
-                control.is_branch = 1'b1;
-            end
-            //U type, LUI
-            7'b0110111: begin
-                control.encoding = U_TYPE;
-                control.reg_write = 1'b1;
-            end
-            //U type, AUIPC
-            7'b0010111: begin
-                control.encoding = U_TYPE;
-                control.reg_write = 1'b1;
-            end
-        endcase
 
         //RV32I
         case (instruction.opcode)
             //R type, SLL, SRL, SRA, ADD, SUB, XOR, OR, AND, SLT, SLTU
             7'b0110011: begin
+                control.encoding = R_TYPE;
+                control.reg_write = 1'b1;
+
                 unique casez ({instruction.funct7[5], instruction.funct3})
                     4'b0_000: control.alu_op = ALU_ADD;
                     4'b1_000: control.alu_op = ALU_SUB;
@@ -89,6 +36,10 @@ module control(
 
             //I type, SLLI, SRLI, SRAI, ADDI, XORI, ORI, ANDI, SLTI, SLTIU
             7'b0010011: begin
+                control.encoding = I_TYPE;
+                control.reg_write = 1'b1;
+                control.alu_src = 1'b1;
+
                 unique casez ({instruction.funct7[5], instruction.funct3})
                     4'b?_000: control.alu_op = ALU_ADD;    //addi
                     4'b?_001: control.alu_op = ALU_SLL;    //slli
@@ -104,6 +55,12 @@ module control(
 
             //I type, LB, LH, LBU, LHU, LW
             7'b0000011: begin
+                control.encoding = I_TYPE;
+                control.reg_write = 1'b1;
+                control.alu_src = 1'b1;
+                control.mem_read = 1'b1;
+                control.mem_to_reg = 1'b1;
+
                 unique casez (instruction.funct3)
                     3'b000: control.alu_op = ALU_ADD;   //lb
                     3'b001: control.alu_op = ALU_ADD;   //lh
@@ -114,12 +71,28 @@ module control(
             end
 
             //I type, JALR
-            7'b1100111: control.alu_op = ALU_ADD;
+            7'b1100111: begin
+                control.encoding = I_TYPE;
+                control.is_branch = 1'b1;
+                control.reg_write = 1'b1;
+
+                control.alu_op = ALU_ADD;
+            end
             //J type, JAL
-            7'b1101111: control.alu_op = ALU_ADD;
+            7'b1101111: begin
+                control.encoding = J_TYPE;
+                control.is_branch = 1'b1;
+                control.reg_write = 1'b1;
+
+                control.alu_op = ALU_ADD;
+            end
 
             //S type, SB, SH, SW
             7'b0100011: begin
+                control.encoding = S_TYPE;
+                control.alu_src = 1'b1;
+                control.mem_write = 1'b1;
+
                 unique casez (instruction.funct3)
                     3'b000: control.alu_op = ALU_ADD;   //sb
                     3'b001: control.alu_op = ALU_ADD;   //sh
@@ -128,11 +101,29 @@ module control(
             end
 
             //B type, BEQ, BNE, BLT, BGE, BLTU, BGEU
-            7'b1100011: control.alu_op = ALU_SUB;
+            7'b1100011: begin
+                control.encoding = B_TYPE;
+                control.is_branch = 1'b1;
 
-            //TODO: U type
+                control.alu_op = ALU_SUB;
+            end
+
+            //U type, LUI
+            7'b0110111: begin
+                control.encoding = U_TYPE;
+                control.reg_write = 1'b1;
+                control.alu_src = 1'b1;
+
+                control.alu_op = ALU_LUI;   //imm
+            end
+
+            //U type, AUIPC
+            7'b0010111: begin
+                control.encoding = U_TYPE;
+                control.reg_write = 1'b1;
+
+                control.alu_op = ALU_ADD;   //PC + imm
+            end
         endcase
-
-    end
-    
+    end  
 endmodule
