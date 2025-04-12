@@ -23,6 +23,8 @@ module cpu(
     logic [31:0] execute_alu_data;
     control_type execute_control;
     logic [31:0] execute_memory_data;
+    logic [1:0] execute_forwardA;
+    logic [1:0] execute_forwardB;
     
     logic [31:0] memory_memory_data;
     logic [31:0] memory_alu_data;
@@ -51,6 +53,8 @@ module cpu(
             if_id_reg.pc <= program_mem_address;
             if_id_reg.instruction <= program_mem_read_data;  //发生了类型转换
             
+            id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
+            id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
             id_ex_reg.reg_rd_id <= decode_reg_rd_id;
             id_ex_reg.data1 <= decode_data1;
             id_ex_reg.data2 <= decode_data2;
@@ -111,6 +115,10 @@ module cpu(
         .data2(id_ex_reg.data2),
         .immediate_data(id_ex_reg.immediate_data),
         .control_in(id_ex_reg.control),
+        .wb_forward_data(wb_result),
+        .mem_forward_data(ex_mem_reg.alu_data),
+        .forwardA(execute_forwardA),
+        .forwardB(execute_forwardB),
         .control_out(execute_control),
         .alu_data(execute_alu_data),
         .memory_data(execute_memory_data),
@@ -127,6 +135,18 @@ module cpu(
         .control_out(memory_control),
         .memory_data_out(memory_memory_data),
         .alu_data_out(memory_alu_data)
+    );
+
+
+    forwarding_unit inst_forwarding_unit(
+        .rs1_id(id_ex_reg.reg_rs1_id),
+        .rs2_id(id_ex_reg.reg_rs2_id),
+        .rd_id_ex(ex_mem_reg.reg_rd_id),
+        .rd_id_mem(mem_wb_reg.reg_rd_id),
+        .reg_write_ex(ex_mem_reg.control.reg_write),
+        .reg_write_mem(mem_wb_reg.control.reg_write),
+        .forwardA(execute_forwardA),
+        .forwardB(execute_forwardB)
     );
 
 

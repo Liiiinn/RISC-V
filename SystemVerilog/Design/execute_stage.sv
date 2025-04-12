@@ -10,6 +10,10 @@ module execute_stage(
     input [31:0] data2,
     input [31:0] immediate_data,
     input control_type control_in,
+    input logic [31:0] wb_forward_data,
+    input logic [31:0] mem_forward_data,
+    input logic [1:0] forwardA,
+    input logic [1:0] forwardB,
     output control_type control_out,
     output logic [31:0] alu_data,
     output logic [31:0] memory_data,
@@ -20,13 +24,36 @@ module execute_stage(
     
     logic [31:0] left_operand;
     logic [31:0] right_operand;
+    logic [31:0] data2_or_imm;
     
     
     always_comb begin: operand_selector
-        left_operand = data1;
-        right_operand = data2;
         if (control_in.alu_src) begin
-            right_operand = immediate_data;
+            data2_or_imm = immediate_data;
+        end
+        else begin
+            data2_or_imm = data2;
+        end
+
+        //forwarding_selector
+        if (forwardA == 2'b10) begin
+            left_operand = mem_forward_data;
+        end 
+        else if (forwardA == 2'b01) begin
+            left_operand = wb_forward_data;
+        end
+        else begin  //else if (forwardA == 2'b00) wuold be better
+            left_operand = data1;
+        end
+        
+        if (forwardB == 2'b10) begin
+            right_operand = mem_forward_data;
+        end 
+        else if (forwardB == 2'b01) begin
+            right_operand = wb_forward_data;
+        end
+        else begin   //else if (forwardB == 2'b00) wuold be better
+            right_operand = data2_or_imm;
         end
     end
     
