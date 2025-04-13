@@ -14,7 +14,14 @@ module stall_unit(
 
     always_comb begin
         if(mem_read && (rd_id != 0) && ((rd_id == rs1_id) || (rd_id == rs2_id))) begin
-        
+            pc_write = 0;
+            if_id_write = 0;
+            id_ex_flush = 1;
+        end
+        else begin
+            pc_write = 1;
+            if_id_write = 1;
+            id_ex_flush = 0;
         end
     end
 endmodule

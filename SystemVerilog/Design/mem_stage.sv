@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+import common::*;
+
 
 module mem_stage(
     input clk,

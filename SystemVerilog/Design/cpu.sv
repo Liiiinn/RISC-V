@@ -9,6 +9,11 @@ module cpu(
     input io_rx
 );
 
+    logic pc_src;
+    logic pc_write = 1; // Default to allow PC write
+    logic if_id_write = 1; // Default to allow IF/ID write
+    logic id_ex_flush = 0; // Default to no flush in ID/EX stage
+
     logic [31:0] program_mem_address = 0;
     logic program_mem_write_enable = 0;         
     logic [31:0] program_mem_write_data = 0; 
@@ -33,8 +38,6 @@ module cpu(
     logic [5:0] wb_reg_rd_id;
     logic [31:0] wb_result;
     logic wb_write_back_en;
-
-    logic pc_src;
     
     if_id_type if_id_reg;
     id_ex_type id_ex_reg;
@@ -147,6 +150,17 @@ module cpu(
         .reg_write_mem(mem_wb_reg.control.reg_write),
         .forward_a(execute_forwardA),
         .forward_b(execute_forwardB)
+    );
+
+
+    stall_unit inst_stall_unit(
+        .rs1_id(if_id_reg.instruction.rs1),
+        .rs2_id(if_id_reg.instruction.rs2),
+        .rd_id(id_ex_reg.reg_rd_id),
+        .mem_read(id_ex_reg.control.mem_read),
+        .pc_write(pc_write),
+        .if_id_write(if_id_write),
+        .id_ex_flush(id_ex_flush)
     );
 
 
