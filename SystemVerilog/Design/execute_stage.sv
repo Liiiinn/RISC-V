@@ -12,8 +12,8 @@ module execute_stage(
     input control_type control_in,
     input logic [31:0] wb_forward_data,
     input logic [31:0] mem_forward_data,
-    input logic [1:0] forwardA,
-    input logic [1:0] forwardB,
+    input logic [1:0] forward_a,
+    input logic [1:0] forward_b,
     output control_type control_out,
     output logic [31:0] alu_data,
     output logic [31:0] memory_data,
@@ -36,23 +36,23 @@ module execute_stage(
         end
 
         //forwarding_selector
-        if (forwardA == 2'b10) begin
+        if (forward_a == 2'b10) begin
             left_operand = mem_forward_data;
         end 
-        else if (forwardA == 2'b01) begin
+        else if (forward_a == 2'b01) begin
             left_operand = wb_forward_data;
         end
-        else begin  //else if (forwardA == 2'b00) wuold be better
+        else begin  //else if (forward_a == 2'b00) wuold be better
             left_operand = data1;
         end
         
-        if (forwardB == 2'b10) begin
+        if (forward_b == 2'b10) begin
             right_operand = mem_forward_data;
         end 
-        else if (forwardB == 2'b01) begin
+        else if (forward_b == 2'b01) begin
             right_operand = wb_forward_data;
         end
-        else begin   //else if (forwardB == 2'b00) wuold be better
+        else begin   //else if (forward_b == 2'b00) wuold be better
             right_operand = data2_or_imm;
         end
     end

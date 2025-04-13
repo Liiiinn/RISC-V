@@ -117,8 +117,8 @@ module cpu(
         .control_in(id_ex_reg.control),
         .wb_forward_data(wb_result),
         .mem_forward_data(ex_mem_reg.alu_data),
-        .forwardA(execute_forwardA),
-        .forwardB(execute_forwardB),
+        .forward_a(execute_forwardA),
+        .forward_b(execute_forwardB),
         .control_out(execute_control),
         .alu_data(execute_alu_data),
         .memory_data(execute_memory_data),
@@ -145,8 +145,8 @@ module cpu(
         .rd_id_mem(mem_wb_reg.reg_rd_id),
         .reg_write_ex(ex_mem_reg.control.reg_write),
         .reg_write_mem(mem_wb_reg.control.reg_write),
-        .forwardA(execute_forwardA),
-        .forwardB(execute_forwardB)
+        .forward_a(execute_forwardA),
+        .forward_b(execute_forwardB)
     );
 
 
