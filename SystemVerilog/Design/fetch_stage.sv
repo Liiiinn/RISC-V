@@ -6,7 +6,8 @@ module fetch_stage(
     input reset_n,
     output logic [31:0] address,
     input [31:0] data,
-    input pc_src
+    input pc_src,
+    input pc_write
 );
 
     logic [31:0] pc_next, pc_reg;
@@ -20,6 +21,16 @@ module fetch_stage(
         else begin
             pc_reg <= pc_next;
         end 
+    end
+
+
+    always_comb begin
+        if (pc_write) begin
+            pc_next = pc_src ? pc_reg + branch_offset : pc_reg + 4;
+        end
+        else begin
+            pc_next = pc_reg;
+        end
     end
         
         
@@ -42,6 +53,6 @@ module fetch_stage(
     
     
     assign address = pc_reg;
-    assign pc_next = pc_src? pc_reg + branch_offset : pc_reg + 4;
+    //assign pc_next = pc_src? pc_reg + branch_offset : pc_reg + 4;
     
 endmodule

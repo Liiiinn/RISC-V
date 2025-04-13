@@ -40,7 +40,9 @@ module cpu(
     logic wb_write_back_en;
     
     if_id_type if_id_reg;
+    if_id_type if_id_reg_next;
     id_ex_type id_ex_reg;
+    id_ex_type id_ex_reg_next;
     ex_mem_type ex_mem_reg;
     mem_wb_type mem_wb_reg;
     
@@ -53,16 +55,9 @@ module cpu(
             mem_wb_reg <= '0;
         end
         else begin
-            if_id_reg.pc <= program_mem_address;
-            if_id_reg.instruction <= program_mem_read_data;  //发生了类型转换
+            if_id_reg <= if_id_reg_next;
             
-            id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
-            id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
-            id_ex_reg.reg_rd_id <= decode_reg_rd_id;
-            id_ex_reg.data1 <= decode_data1;
-            id_ex_reg.data2 <= decode_data2;
-            id_ex_reg.immediate_data <= decode_immediate_data;
-            id_ex_reg.control <= decode_control;
+            id_ex_reg <= id_ex_reg_next;
             
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
@@ -73,6 +68,32 @@ module cpu(
             mem_wb_reg.memory_data <= memory_memory_data;
             mem_wb_reg.alu_data <= memory_alu_data;
             mem_wb_reg.control <= memory_control;
+        end
+    end
+
+
+    always_comb begin
+        if(if_id_write) begin
+            if_id_reg_next.pc = program_mem_address;
+            if_id_reg_next.instruction = program_mem_read_data;  //发生了类型转换
+        end
+        else begin
+            if_id_reg_next = if_id_reg;
+        end
+    end
+
+    always_comb begin
+        if(id_ex_flush) begin
+            id_ex_reg_next = '0;
+        end
+        else begin //bug: 全部flush还是只flush control?
+            id_ex_reg_next.reg_rs1_id <= if_id_reg.instruction.rs1;
+            id_ex_reg_next.reg_rs2_id <= if_id_reg.instruction.rs2;
+            id_ex_reg_next.reg_rd_id <= decode_reg_rd_id;
+            id_ex_reg_next.data1 <= decode_data1;
+            id_ex_reg_next.data2 <= decode_data2;
+            id_ex_reg_next.immediate_data <= decode_immediate_data;
+            id_ex_reg_next.control <= decode_control;
         end
     end
 
@@ -91,7 +112,8 @@ module cpu(
         .reset_n(reset_n),
         .address(program_mem_address),
         .data(program_mem_read_data),
-        .pc_src(pc_src)
+        .pc_src(pc_src),
+        .pc_write(pc_write)
     );
     
     
