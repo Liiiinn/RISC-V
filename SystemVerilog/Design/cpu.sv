@@ -42,7 +42,7 @@ module cpu(
     if_id_type if_id_reg;
     if_id_type if_id_reg_next;
     id_ex_type id_ex_reg;
-    id_ex_type id_ex_reg_next;
+    control_type id_ex_reg_control_next;
     ex_mem_type ex_mem_reg;
     mem_wb_type mem_wb_reg;
     
@@ -57,7 +57,13 @@ module cpu(
         else begin
             if_id_reg <= if_id_reg_next;
             
-            id_ex_reg <= id_ex_reg_next;
+            id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
+            id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
+            id_ex_reg.reg_rd_id <= decode_reg_rd_id;
+            id_ex_reg.data1 <= decode_data1;
+            id_ex_reg.data2 <= decode_data2;
+            id_ex_reg.immediate_data <= decode_immediate_data;
+            id_ex_reg.control <= id_ex_reg_control_next;
             
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
@@ -82,18 +88,12 @@ module cpu(
         end
     end
 
-    always_comb begin
+    always_comb begin        
         if(id_ex_flush) begin
-            id_ex_reg_next = '0;
+            id_ex_reg_control_next = '0;
         end
-        else begin //bug: 全部flush还是只flush control?
-            id_ex_reg_next.reg_rs1_id <= if_id_reg.instruction.rs1;
-            id_ex_reg_next.reg_rs2_id <= if_id_reg.instruction.rs2;
-            id_ex_reg_next.reg_rd_id <= decode_reg_rd_id;
-            id_ex_reg_next.data1 <= decode_data1;
-            id_ex_reg_next.data2 <= decode_data2;
-            id_ex_reg_next.immediate_data <= decode_immediate_data;
-            id_ex_reg_next.control <= decode_control;
+        else begin
+            id_ex_reg_control_next <= decode_control;
         end
     end
 
