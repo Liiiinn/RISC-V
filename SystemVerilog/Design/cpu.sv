@@ -124,7 +124,7 @@ module cpu(
         .branch_address(execute_mem_branch_addresss),
         .flush(id_ex_flush),       
         .data(pc_inc),
-        .pc_src(pc_src),
+ //       .pc_src(pc_src),
         .pc_write(pc_write),
     //    .address(program_mem_address),
          .address(program_mem_pc_input)
