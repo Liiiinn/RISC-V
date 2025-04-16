@@ -15,6 +15,7 @@ module decode_stage(
     output logic [31:0] read_data1,
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
+    output logic [31:0]pc_out,
     output control_type control_signals
 );
 
@@ -50,5 +51,5 @@ module decode_stage(
     assign read_data2 = rf_read_data2;
     assign immediate_data = immediate_extension(instruction, controls.encoding);
     assign control_signals = controls;
-    
+    assign pc_out = pc;
 endmodule
