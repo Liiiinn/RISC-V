@@ -7,6 +7,7 @@ package common;
     //     ALU_ADD = 3'b010,
     //     ALU_SUB = 3'b011
     // } alu_op_type;
+    // add some global parameters
     localparam logic [6:0] R_type    = 7'b0110011;
     localparam logic [6:0] I_type1   = 7'b0010011;
     localparam logic [6:0] I_type_lw = 7'b0000011;
