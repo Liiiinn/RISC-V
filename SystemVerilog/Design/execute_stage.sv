@@ -31,17 +31,17 @@ module execute_stage(
 
    always_comb begin:branch_PC_ADD
         case (data[6:0])
-           7'b1100011: begin
-                branch_offset = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0}; //Btype
+           B_type: begin
+               exe_branch_jump_address = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0} + pc_in; //Btype
            end
-           7'b1101111: begin
-                branch_offset = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
+           J_type: begin
+               exe_branch_jump_address = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0} + pc_in; //Jal
             end
             7'b1100111: begin
-                branch_offset = {{20{data[31]}}, data[31:20]}; //Jalr
+                exe_branch_jump_address = {{20{data[31]}}, data[31:20]} + pc_in; //Jalr
             end
           default: begin
-               branch_offset = 0;            end
+               exe_branch_jump_address = pc_in;            end
         endcase
             
       
