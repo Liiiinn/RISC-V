@@ -16,6 +16,12 @@ package common;
     localparam logic [6:0] J_type    = 7'b1101111;
     localparam logic [6:0] U_type_lui = 7'b0110111;
     localparam logic [6:0] U_type_aui = 7'b0010111;
+    localparam logic [9:0] BEQ_INSTRUCTION = {3'b000, 7'b1100011};
+    localparam logic [9:0] BNE_INSTRUCTION = {3'b001, 7'b1100011};
+    localparam logic [9:0] BLT_INSTRUCTION = {3'b100, 7'b1100011};
+    localparam logic [9:0] BGE_INSTRUCTION = {3'b101, 7'b1100011};
+    localparam logic [9:0] BLTU_INSTRUCTION = {3'b110, 7'b1100011};
+    localparam logic [9:0] BGEU_INSTRUCTION = {3'b111, 7'b1100011}; 
 
     typedef enum logic [3:0]
     {
