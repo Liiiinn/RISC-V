@@ -9,7 +9,7 @@ module fetch_stage(
     input [31:0] data,
     input [31:0] branch_address,
 //    input pc_src,
-//    input pc_write
+    input pc_write
     output logic [31:0] address,
 );
 
