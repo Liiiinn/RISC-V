@@ -30,8 +30,25 @@ module execute_stage(
     
 
    always_comb begin:branch_PC_ADD
-       exe_branch_jump_address = (immediate_data<<1) + pc_in;  // get the branch address
+        case (data[6:0])
+           7'b1100011: begin
+                branch_offset = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0}; //Btype
+           end
+           7'b1101111: begin
+                branch_offset = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
+            end
+            7'b1100111: begin
+                branch_offset = {{20{data[31]}}, data[31:20]}; //Jalr
+            end
+          default: begin
+               branch_offset = 0;            end
+        endcase
+            
+      
     end
+   
+
+
     
     always_comb begin: operand_selector
         if (control_in.alu_src) begin
