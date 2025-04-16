@@ -120,7 +120,7 @@ module cpu(
     fetch_stage inst_fetch_stage(
         .clk(clk), 
         .reset_n(reset_n),
-        .is_branch(ex_mem_reg.control.is_branch),
+        .is_branch(pc_src),
         .branch_address(execute_mem_branch_addresss),
         .flush(id_ex_flush),       
         .data(pc_inc),
