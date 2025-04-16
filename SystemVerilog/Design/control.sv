@@ -101,11 +101,17 @@ module control(
             end
 
             //B type, BEQ, BNE, BLT, BGE, BLTU, BGEU
-            7'b1100011: begin
+            B_type: begin
                 control.encoding = B_TYPE;
-                control.is_branch = 1'b1;
-
-                control.alu_op = ALU_SUB;
+                control.is_branch = 1'b1;   
+             unique casez ({instruction.funct3, instruction.opcode})
+                BEQ_INSTRUCTION: control.alu_op = B_BEQ; //beq
+                BNE_INSTRUCTION: control.alu_op = B_BNE; //bne
+                BLT_INSTRUCTION: control.alu_op = B_BLT; //blt
+                BGE_INSTRUCTION: control.alu_op = B_BGE;
+                BLTU_INSTRUCTION: control.alu_op = B_LTU;
+                BGEU_INSTRUCTION: control.alu_op = B_GEU;
+             endcase
             end
 
             //U type, LUI
