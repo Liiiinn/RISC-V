@@ -7,6 +7,14 @@ package common;
     //     ALU_ADD = 3'b010,
     //     ALU_SUB = 3'b011
     // } alu_op_type;
+    localparam logic [6:0] R_type    = 7'b0110011;
+    localparam logic [6:0] I_type1   = 7'b0010011;
+    localparam logic [6:0] I_type_lw = 7'b0000011;
+    localparam logic [6:0] S_type    = 7'b0100011;
+    localparam logic [6:0] B_type    = 7'b1100011;
+    localparam logic [6:0] J_type    = 7'b1101111;
+    localparam logic [6:0] U_type_lui = 7'b0110111;
+    localparam logic [6:0] U_type_aui = 7'b0010111;
 
     typedef enum logic [3:0]
     {
@@ -20,6 +28,13 @@ package common;
         ALU_SLL = 4'b0111,  //shift left logical
         ALU_SRL = 4'b1000,  //shift right logical
         ALU_SRA = 4'b1001  //shift right arithmetic
+        B_BEQ   = 4'b1010, // equal ->jump
+        B_BNE   = 4'b1011, // not equal ->jump
+        B_BLT   = 4'b1100, // smaller -> jump
+        B_BGE   = 4'b1101, // biger ->jump
+        B_LTU   = 4'b1110, // unsigned smaller ->jump
+        B_GEU   = 4'b1111  // unsigner bigger -> jump
+
     } alu_op_type;
     
     
@@ -73,6 +88,8 @@ package common;
         logic [31:0] data1;
         logic [31:0] data2;
         logic [31:0] immediate_data;
+        logic [31:0] pc; //add new element
+
         control_type control;
     } id_ex_type;
     
