@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module gshare_prediction#(
+module gshare_predictor#(
     parameter GHR_BITS = 8,
     parameter BHT_SIZE = 256
     )(

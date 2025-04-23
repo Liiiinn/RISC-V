@@ -10,9 +10,9 @@ module cpu(
 );
 
     logic pc_src;
-    logic pc_write = 1; // Default 1: allow PC write
-    logic if_id_write = 1; // Default1: allow IF/ID write
-    logic if_id_flush = 0; // Default 0: do not flush in IF/ID stage
+    logic pc_write; // Default 1: allow PC write
+    logic if_id_write; // Default1: allow IF/ID write
+    logic if_id_flush; // Default 0: do not flush in IF/ID stage
     logic id_ex_flush; // Default 0: do not flush in ID/EX stage
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
@@ -212,6 +212,16 @@ module cpu(
         .pc_write(pc_write),
         .if_id_write(if_id_write),
         .id_ex_flush(stall_id_ex_flush)
+    );
+
+
+    gshare_predictor inst_gshare_predictor(
+        .clk(clk),
+        .reset_n(reset_n),
+        .pc(program_mem_address),
+        .update(execute_control.branch), //遇到branch?
+        .actual_taken(execute_control.branch_taken), //实际跳转?
+        .prediction() //做出预测（小心pc_src多驱动）
     );
 
 
