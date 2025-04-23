@@ -18,14 +18,14 @@ module cpu(
     logic program_mem_write_enable = 0;         
     logic [31:0] program_mem_write_data = 0; 
     logic [31:0] program_mem_read_data;
-    logic [31:0] program_mem_pc_input;
-    logic [31:0] pc_inc; // add one
+    //logic [31:0] program_mem_pc_input;
+    //logic [31:0] pc_inc; // add one
     
     logic [5:0] decode_reg_rd_id;
     logic [31:0] decode_data1;
     logic [31:0] decode_data2;
     logic [31:0] decode_immediate_data;
-    logic [31:0] decode_pc_out; // add one
+    //logic [31:0] decode_pc_out; // add one
     control_type decode_control;
     
     logic [31:0] execute_alu_data;
@@ -33,8 +33,8 @@ module cpu(
     logic [31:0] execute_memory_data;
     logic [1:0] execute_forwardA;
     logic [1:0] execute_forwardB;
-    logic [31:0] execute_jump_address; // add one
-    logic [31:0] execute_mem_branch_addresss;
+    //logic [31:0] execute_jump_address; // add one
+    //logic [31:0] execute_mem_branch_addresss;
     
     logic [31:0] memory_memory_data;
     logic [31:0] memory_alu_data;
@@ -60,9 +60,9 @@ module cpu(
             mem_wb_reg <= '0;
         end
         else begin
-      //      if_id_reg <= if_id_reg_next;
-            if_id_reg.pc <= if_id_reg_next.pc ;
-            if_id_reg.instruction <= if_id_reg_next.instruction;
+            if_id_reg <= if_id_reg_next;
+            //if_id_reg.pc <= if_id_reg_next.pc ;
+            //if_id_reg.instruction <= if_id_reg_next.instruction;
             
             
             id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
@@ -70,7 +70,7 @@ module cpu(
             id_ex_reg.reg_rd_id <= decode_reg_rd_id;
             id_ex_reg.data1 <= decode_data1;
             id_ex_reg.data2 <= decode_data2;
-            id_ex_reg.pc <= decode_pc_out;
+            //id_ex_reg.pc <= decode_pc_out;
             id_ex_reg.immediate_data <= decode_immediate_data;
             id_ex_reg.control <= id_ex_reg_control_next;
             
@@ -78,7 +78,7 @@ module cpu(
             ex_mem_reg.control <= execute_control;
             ex_mem_reg.alu_data <= execute_alu_data;
             ex_mem_reg.memory_data <= execute_memory_data;
-            execute_mem_branch_addresss <= execute_jump_address;
+            //execute_mem_branch_addresss <= execute_jump_address;
             
             mem_wb_reg.reg_rd_id <= ex_mem_reg.reg_rd_id;
             mem_wb_reg.memory_data <= memory_memory_data;
@@ -90,7 +90,7 @@ module cpu(
 
     always_comb begin
         if(if_id_write) begin
-            if_id_reg_next.pc = program_mem_pc_input;
+            if_id_reg_next.pc = program_mem_address;
             if_id_reg_next.instruction = program_mem_read_data;  //发生了类型转换
         end
         else begin
@@ -102,13 +102,13 @@ module cpu(
         if(id_ex_flush) begin
             id_ex_reg_control_next = '0;
             
-            id_ex_reg.reg_rd_id <= 6'b0;
-            id_ex_reg.data1 <= 32'b0;
-            id_ex_reg.data2 <= 32'b0;
-            id_ex_reg.immediate_data <= 32'b0;
-            id_ex_reg.control <= 0;
-            id_ex_reg.pc <= 32'b0; //add one
-  //          id_ex_flush <= 1'b0;
+            //id_ex_reg.reg_rd_id <= 6'b0;
+            //id_ex_reg.data1 <= 32'b0;
+            //id_ex_reg.data2 <= 32'b0;
+            //id_ex_reg.immediate_data <= 32'b0;
+            //id_ex_reg.control <= 0;
+            //id_ex_reg.pc <= 32'b0; //add one
+            //id_ex_flush <= 1'b0;
                     
         end
         else begin
@@ -120,25 +120,26 @@ module cpu(
     fetch_stage inst_fetch_stage(
         .clk(clk), 
         .reset_n(reset_n),
-        .is_branch(pc_src),
-        .branch_address(execute_mem_branch_addresss),
-        .flush(id_ex_flush),       
-        .data(pc_inc),
- //       .pc_src(pc_src),
-        .pc_write(pc_write),
-    //    .address(program_mem_address),
-         .address(program_mem_pc_input)
+        .address(program_mem_address),
+        .data(program_mem_read_data),
+        //.is_branch(pc_src),
+        //.branch_address(execute_mem_branch_addresss),
+        //.flush(id_ex_flush),       
+        //.data(pc_inc),
+        .pc_src(pc_src),
+        .pc_write(pc_write)
+        //.address(program_mem_pc_input)
     );
+
+
     program_memory inst_mem(
         .clk(clk),        
         .byte_address(program_mem_pc_input),//加assign选择from pc or from uart
         .write_enable(program_mem_write_enable),
         .write_data(program_mem_write_data),
-        .read_data(program_mem_read_data),
-        .pc_inc(pc_inc)
+        .read_data(program_mem_read_data)
+        //.pc_inc(pc_inc)
     );
-    
-
     
     
     decode_stage inst_decode_stage(
@@ -153,7 +154,7 @@ module cpu(
         .read_data1(decode_data1),
         .read_data2(decode_data2),
         .immediate_data(decode_immediate_data),
-        .pc_out(decode_pc_out),
+        //.pc_out(decode_pc_out),
         .control_signals(decode_control)
     );
     
