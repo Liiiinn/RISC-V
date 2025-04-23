@@ -10,10 +10,12 @@ module cpu(
 );
 
     logic pc_src;
-    logic pc_write = 1; // Default to allow PC write
-    logic if_id_write = 1; // Default to allow IF/ID write
-    logic if_id_flush = 0; // Default to no flush in IF/ID stage
-    logic id_ex_flush = 0; // Default to no flush in ID/EX stage
+    logic pc_write = 1; // Default 1: allow PC write
+    logic if_id_write = 1; // Default1: allow IF/ID write
+    logic if_id_flush = 0; // Default 0: do not flush in IF/ID stage
+    logic id_ex_flush; // Default 0: do not flush in ID/EX stage
+    logic branch_id_ex_flush; // Default 0
+    logic stall_id_ex_flush; // Default 0
 
     logic [31:0] program_mem_address = 0;
     logic program_mem_write_enable = 0;         
@@ -124,15 +126,12 @@ module cpu(
     fetch_stage inst_fetch_stage(
         .clk(clk), 
         .reset_n(reset_n),
-        .address(program_mem_address),
         .data(program_mem_read_data),
-        //.is_branch(pc_src),
-        //.branch_address(execute_mem_branch_addresss),
-        //.flush(id_ex_flush),       
-        //.data(pc_inc),
         .pc_src(pc_src),
-        .pc_write(pc_write)
-        //.address(program_mem_pc_input)
+        .pc_write(pc_write),
+        .address(program_mem_address),
+        .if_id_flush(if_id_flush),
+        .id_ex_flush(branch_id_ex_flush)
     );
 
 
@@ -212,12 +211,12 @@ module cpu(
         .mem_read(id_ex_reg.control.mem_read),
         .pc_write(pc_write),
         .if_id_write(if_id_write),
-        .id_ex_flush(id_ex_flush)
+        .id_ex_flush(stall_id_ex_flush)
     );
 
 
     assign wb_reg_rd_id = mem_wb_reg.reg_rd_id;
     assign wb_write_back_en = mem_wb_reg.control.reg_write;
     assign wb_result = mem_wb_reg.control.mem_read ? mem_wb_reg.memory_data : mem_wb_reg.alu_data;
-    
+    assign id_ex_flush = branch_id_ex_flush | stall_id_ex_flush;
 endmodule

@@ -6,10 +6,12 @@ import common::*;
 module fetch_stage(
     input clk,
     input reset_n,
-    output logic [31:0] address,
     input [31:0] data,
     input pc_src,
-    input pc_write
+    input pc_write,
+    output logic [31:0] address,
+    output logic if_id_flush,
+    output logic id_ex_flush
 );
 
     logic [31:0] pc_next, pc_reg;
@@ -46,7 +48,7 @@ module fetch_stage(
     end
 
     
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             pc_reg <= 0;
         end
@@ -67,4 +69,6 @@ module fetch_stage(
 
 
     assign address = pc_reg;
+    assign if_id_flush = pc_src? 1'b1 : 1'b0; //flush if branch taken
+    assign id_ex_flush = pc_src? 1'b1 : 1'b0; //flush if branch taken
 endmodule

@@ -35,7 +35,7 @@ package common;
         ALU_SLTU = 4'b0110, //set < unsigned
         ALU_SLL = 4'b0111,  //shift left logical
         ALU_SRL = 4'b1000,  //shift right logical
-        ALU_SRA = 4'b1001  //shift right arithmetic
+        ALU_SRA = 4'b1001,  //shift right arithmetic
         B_BEQ   = 4'b1010, // equal -> jump
         B_BNE   = 4'b1011, // not equal ->jump
         B_BLT   = 4'b1100, // smaller -> jump
