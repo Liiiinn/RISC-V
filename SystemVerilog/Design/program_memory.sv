@@ -5,8 +5,8 @@ module program_memory (
     input [31:0] byte_address,
     input write_enable,         
     input [31:0] write_data, 
-    output logic [31:0] read_data,
-    output logic [31:0] pc_inc
+    output logic [31:0] read_data
+    //output logic [31:0] pc_inc
 );
 
     logic [31:0] ram [256];
@@ -28,5 +28,5 @@ module program_memory (
     end
     
     assign read_data = ram[word_address];
-    assign pc_inc = byte_address + 4;
+    //assign pc_inc = byte_address + 4;
 endmodule

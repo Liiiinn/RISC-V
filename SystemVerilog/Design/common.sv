@@ -11,6 +11,7 @@ package common;
     localparam logic [6:0] R_type    = 7'b0110011;
     localparam logic [6:0] I_type1   = 7'b0010011;
     localparam logic [6:0] I_type_lw = 7'b0000011;
+    localparam logic [6:0] I_type_jalr = 7'b1100111;
     localparam logic [6:0] S_type    = 7'b0100011;
     localparam logic [6:0] B_type    = 7'b1100011;
     localparam logic [6:0] J_type    = 7'b1101111;
@@ -35,7 +36,7 @@ package common;
         ALU_SLL = 4'b0111,  //shift left logical
         ALU_SRL = 4'b1000,  //shift right logical
         ALU_SRA = 4'b1001  //shift right arithmetic
-        B_BEQ   = 4'b1010, // equal ->jump
+        B_BEQ   = 4'b1010, // equal -> jump
         B_BNE   = 4'b1011, // not equal ->jump
         B_BLT   = 4'b1100, // smaller -> jump
         B_BGE   = 4'b1101, // biger ->jump
@@ -82,7 +83,7 @@ package common;
         
     typedef struct  packed
     {
-        logic [31:0] pc;
+        //logic [31:0] pc;
         instruction_type instruction;
     } if_id_type;
     

@@ -12,6 +12,7 @@ module cpu(
     logic pc_src;
     logic pc_write = 1; // Default to allow PC write
     logic if_id_write = 1; // Default to allow IF/ID write
+    logic if_id_flush = 0; // Default to no flush in IF/ID stage
     logic id_ex_flush = 0; // Default to no flush in ID/EX stage
 
     logic [31:0] program_mem_address = 0;
@@ -90,8 +91,11 @@ module cpu(
 
     always_comb begin
         if(if_id_write) begin
-            if_id_reg_next.pc = program_mem_address;
+            //if_id_reg_next.pc = program_mem_address;
             if_id_reg_next.instruction = program_mem_read_data;  //发生了类型转换
+        end
+        else if(if_id_flush) begin
+            if_id_reg_next = '0;
         end
         else begin
             if_id_reg_next = if_id_reg;

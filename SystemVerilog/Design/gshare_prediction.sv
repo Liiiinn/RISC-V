@@ -8,10 +8,10 @@ module gshare_prediction#(
     input logic clk,
     input logic reset_n,
 
-    input logic [31:0] pc,                // 程序计数器
+    input logic [31:0] pc,
     input logic update,            // 是否更新预测器
     input logic actual_taken,      // 实际是否跳转
-    output logic prediction         // 预测结果（跳转 or 不跳转）
+    output logic prediction        // 预测结果（跳转 or 不跳转）
     );
 
     logic [GHR_BITS-1:0] ghr;  // Global History Register    
@@ -24,7 +24,7 @@ module gshare_prediction#(
     always_ff @(posedge clk or posedge reset_n) begin
         if (!reset_n) begin
             ghr <= '0;
-            for (int i = 0; i < BHT_SIZE; i++) begin //可综合吗？
+            for (int i = 0; i < BHT_SIZE; i++) begin
                 bht[i] <= 2'b01; // 默认弱不跳转
             end
         end 
@@ -46,8 +46,7 @@ module gshare_prediction#(
     end
 
 
-    assign index = (pc[7:0]) ^ ghr;
-
+    assign index = (pc[7:0]) ^ ghr; //hash
     assign counter = bht[index];
     assign prediction = counter[1];
 endmodule
