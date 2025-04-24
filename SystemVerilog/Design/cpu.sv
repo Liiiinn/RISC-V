@@ -16,6 +16,7 @@ module cpu(
     logic id_ex_flush; // Default 0: do not flush in ID/EX stage
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
+    logic fetch_prediction;
 
     logic [31:0] program_mem_address = 0;
     logic program_mem_write_enable = 0;         
@@ -129,6 +130,7 @@ module cpu(
         .data(program_mem_read_data),
         .pc_src(pc_src),
         .pc_write(pc_write),
+        .prediction(fetch_prediction),
         .address(program_mem_address),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush)
@@ -219,9 +221,9 @@ module cpu(
         .clk(clk),
         .reset_n(reset_n),
         .pc(program_mem_address),
-        .update(execute_control.branch), //遇到branch?
-        .actual_taken(execute_control.branch_taken), //实际跳转?
-        .prediction() //做出预测（小心pc_src多驱动）
+        .update(execute_control.is_branch),
+        .actual_taken(pc_src),
+        .prediction(fetch_prediction)
     );
 
 
