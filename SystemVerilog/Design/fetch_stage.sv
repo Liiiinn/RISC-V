@@ -10,6 +10,8 @@ module fetch_stage(
     input pc_src,
     input pc_write,
     input prediction,
+    input [31:0] jalr_target_offset,
+    input jalr_flag,
     output logic [31:0] address,
     output logic if_id_flush,
     output logic id_ex_flush
@@ -37,9 +39,6 @@ module fetch_stage(
             J_type: begin
                 branch_offset_0 = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
             end
-            //I_type_jalr: begin
-            //    branch_offset_0 = {{20{data[31]}}, data[31:20]}; //Jalr
-            //end
             default: begin
                 branch_offset_0 = 0;
             end
@@ -55,7 +54,12 @@ module fetch_stage(
             prediction_2 <= 0;
         end
         else begin
-            branch_offset_1 <= branch_offset_0;
+            if(jalr_flag) begin
+                branch_offset_1 <= jalr_target_offset; //jalr
+            end
+            else begin
+                branch_offset_1 <= branch_offset_0; //jal or conditional branch
+            end
             branch_offset_2 <= branch_offset_1;
             prediction_1 <= prediction;
             prediction_2 <= prediction_1;

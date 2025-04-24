@@ -15,7 +15,9 @@ module decode_stage(
     output logic [31:0] read_data1,
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
-    output logic [31:0]pc_out,
+    //output logic [31:0]pc_out,
+    output logic [31:0] jalr_target_offset,
+    output logic jalr_flag,
     output control_type control_signals
 );
 
@@ -23,6 +25,18 @@ module decode_stage(
     logic [31:0] rf_read_data2;
     
     control_type controls;
+
+
+    always_comb begin
+        if (controls.encoding == I_TYPE && controls.is_branch == 1'b1) begin  //jalr
+            jalr_target_offset = (rf_read_data1 + immediate_data) & 32'hFFFFFFFE - pc;
+            jalr_flag = 1'b1;
+        end
+        else begin
+            jalr_target_offset = 0;
+            jalr_flag = 1'b0;
+        end
+    end
         
 
     register_file rf_inst(
@@ -51,5 +65,5 @@ module decode_stage(
     assign read_data2 = rf_read_data2;
     assign immediate_data = immediate_extension(instruction, controls.encoding);
     assign control_signals = controls;
-    assign pc_out = pc;
+    //assign pc_out = pc;
 endmodule

@@ -29,6 +29,8 @@ module cpu(
     logic [31:0] decode_data1;
     logic [31:0] decode_data2;
     logic [31:0] decode_immediate_data;
+    logic [31:0] decode_jalr_target_offset;
+    logic decode_jalr_flag;
     //logic [31:0] decode_pc_out; // add one
     control_type decode_control;
     
@@ -37,7 +39,6 @@ module cpu(
     logic [31:0] execute_memory_data;
     logic [1:0] execute_forwardA;
     logic [1:0] execute_forwardB;
-    //logic [31:0] execute_jump_address; // add one
     //logic [31:0] execute_mem_branch_addresss;
     
     logic [31:0] memory_memory_data;
@@ -131,6 +132,8 @@ module cpu(
         .pc_src(pc_src),
         .pc_write(pc_write),
         .prediction(fetch_prediction),
+        .jalr_target_offset(decode_jalr_target_offset),
+        .jalr_flag(decode_jalr_flag),
         .address(program_mem_address),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush)
@@ -160,6 +163,8 @@ module cpu(
         .read_data2(decode_data2),
         .immediate_data(decode_immediate_data),
         //.pc_out(decode_pc_out),
+        .jalr_target_offset(decode_jalr_target_offset),
+        .jalr_flag(decode_jalr_flag),
         .control_signals(decode_control)
     );
     
@@ -179,6 +184,7 @@ module cpu(
         .alu_data(execute_alu_data),
         .memory_data(execute_memory_data),
         .pc_src(pc_src)
+        //.jalr_target_address(execute_jalr_target_address)
     );
     
     

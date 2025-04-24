@@ -19,7 +19,7 @@ module execute_stage(
     output logic [31:0] alu_data,
     output logic [31:0] memory_data,
     output logic pc_src
-    //output logic [31:0] exe_branch_jump_address
+    //output logic [31:0] jalr_target_address
 );
 
     logic zero_flag;
@@ -36,18 +36,15 @@ module execute_stage(
 //           end
 //           J_type: begin
 //               exe_branch_jump_address = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0} + pc_in; //Jal
-//            end
-//            7'b1100111: begin
-//                exe_branch_jump_address = {{20{data[31]}}, data[31:20]} + pc_in; //Jalr
-//            end
-//          default: begin
-//               exe_branch_jump_address = pc_in;            end
+//           end
+//           7'b1100111: begin
+//               exe_branch_jump_address = {{20{data[31]}}, data[31:20]} + pc_in; //Jalr
+//           end
+//           default: begin
+//              exe_branch_jump_address = pc_in;
+//           end
 //        endcase
-//            
-//      
 //    end
-   
-
 
     
     always_comb begin: operand_selector
@@ -91,6 +88,7 @@ module execute_stage(
     
     assign control_out = control_in;
     assign memory_data = data2;
-    assign pc_src = zero_flag & control_in.is_branch;
+    assign pc_src = (control_in.encoding == I_TYPE && control.is_branch == 1'b1) ? 
+        1'b1 : (zero_flag & control_in.is_branch);
     
 endmodule
