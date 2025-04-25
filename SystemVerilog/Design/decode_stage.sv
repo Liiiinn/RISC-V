@@ -7,7 +7,7 @@ module decode_stage(
     input clk,
     input reset_n,
     input instruction_type instruction,
-    input logic [31:0] pc,
+    input logic [31:0] pc_in,
     input logic write_en,
     input logic [5:0] write_id,
     input logic [31:0] write_data,
@@ -15,7 +15,7 @@ module decode_stage(
     output logic [31:0] read_data1,
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
-    //output logic [31:0]pc_out,
+    output logic [31:0]pc_out,
     output logic [31:0] jalr_target_offset,
     output logic jalr_flag,
     output control_type control_signals
@@ -29,7 +29,7 @@ module decode_stage(
 
     always_comb begin
         if (controls.encoding == I_TYPE && controls.is_branch == 1'b1) begin  //jalr
-            jalr_target_offset = (rf_read_data1 + immediate_data) & 32'hFFFFFFFE - pc;
+            jalr_target_offset = (rf_read_data1 + immediate_data) & 32'hFFFFFFFE - pc_in;
             jalr_flag = 1'b1;
         end
         else begin
@@ -65,5 +65,5 @@ module decode_stage(
     assign read_data2 = rf_read_data2;
     assign immediate_data = immediate_extension(instruction, controls.encoding);
     assign control_signals = controls;
-    //assign pc_out = pc;
+    assign pc_out = pc_in;
 endmodule

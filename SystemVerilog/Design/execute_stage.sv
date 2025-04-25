@@ -9,7 +9,7 @@ module execute_stage(
     input [31:0] data1,
     input [31:0] data2,
     input [31:0] immediate_data,
-    //input [31:0] pc_in,
+    input [31:0] pc_in,
     input control_type control_in,
     input logic [31:0] wb_forward_data,
     input logic [31:0] mem_forward_data,
@@ -23,28 +23,11 @@ module execute_stage(
 );
 
     logic zero_flag;
+    logic [31:0] alu_result;
     
     logic [31:0] left_operand;
     logic [31:0] right_operand;
     logic [31:0] data2_or_imm;
-    
-
-//   always_comb begin:branch_PC_ADD
-//        case (data[6:0])
-//           B_type: begin
-//               exe_branch_jump_address = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0} + pc_in; //Btype
-//           end
-//           J_type: begin
-//               exe_branch_jump_address = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0} + pc_in; //Jal
-//           end
-//           7'b1100111: begin
-//               exe_branch_jump_address = {{20{data[31]}}, data[31:20]} + pc_in; //Jalr
-//           end
-//           default: begin
-//              exe_branch_jump_address = pc_in;
-//           end
-//        endcase
-//    end
 
     
     always_comb begin: operand_selector
@@ -76,6 +59,16 @@ module execute_stage(
             right_operand = data2_or_imm;
         end
     end
+
+
+    always_comb begin: jalr_target_address
+        if (control_in.encoding == J_TYPE || (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)) begin  //jalr
+            alu_data = pc_in;
+        end
+        else begin
+            alu_data = alu_result;
+        end
+    end
     
     
     alu inst_alu(
@@ -83,7 +76,7 @@ module execute_stage(
         .left_operand(left_operand), 
         .right_operand(right_operand),
         .zero_flag(zero_flag),
-        .result(alu_data)
+        .result(alu_result)
     );
     
     assign control_out = control_in;

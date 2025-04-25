@@ -31,7 +31,7 @@ module cpu(
     logic [31:0] decode_immediate_data;
     logic [31:0] decode_jalr_target_offset;
     logic decode_jalr_flag;
-    //logic [31:0] decode_pc_out; // add one
+    logic [31:0] decode_pc_out;
     control_type decode_control;
     
     logic [31:0] execute_alu_data;
@@ -75,7 +75,7 @@ module cpu(
             id_ex_reg.reg_rd_id <= decode_reg_rd_id;
             id_ex_reg.data1 <= decode_data1;
             id_ex_reg.data2 <= decode_data2;
-            //id_ex_reg.pc <= decode_pc_out;
+            id_ex_reg.pc <= decode_pc_out;
             id_ex_reg.immediate_data <= decode_immediate_data;
             id_ex_reg.control <= id_ex_reg_control_next;
             
@@ -154,7 +154,7 @@ module cpu(
         .clk(clk), 
         .reset_n(reset_n),    
         .instruction(if_id_reg.instruction),
-        .pc(if_id_reg.pc),
+        .pc_in(if_id_reg.pc),
         .write_en(wb_write_back_en),
         .write_id(wb_reg_rd_id),        
         .write_data(wb_result),
@@ -162,7 +162,7 @@ module cpu(
         .read_data1(decode_data1),
         .read_data2(decode_data2),
         .immediate_data(decode_immediate_data),
-        //.pc_out(decode_pc_out),
+        .pc_out(decode_pc_out),
         .jalr_target_offset(decode_jalr_target_offset),
         .jalr_flag(decode_jalr_flag),
         .control_signals(decode_control)
@@ -175,6 +175,7 @@ module cpu(
         .data1(id_ex_reg.data1),
         .data2(id_ex_reg.data2),
         .immediate_data(id_ex_reg.immediate_data),
+        .pc_in(id_ex_reg.pc),
         .control_in(id_ex_reg.control),
         .wb_forward_data(wb_result),
         .mem_forward_data(ex_mem_reg.alu_data),
