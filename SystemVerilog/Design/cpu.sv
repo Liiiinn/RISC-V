@@ -142,7 +142,8 @@ module cpu(
 
     program_memory inst_mem(
         .clk(clk),        
-        .byte_address(program_mem_pc_input),//加assign选择from pc or from uart
+      //  .byte_address(program_mem_pc_input),//加assign选择from pc or from uart
+        .byte_address(program_mem_address),
         .write_enable(program_mem_write_enable),
         .write_data(program_mem_write_data),
         .read_data(program_mem_read_data)
