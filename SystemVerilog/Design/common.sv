@@ -42,7 +42,7 @@ package common;
         B_BLT   = 4'b1100, // smaller -> jump
         B_BGE   = 4'b1101, // biger ->jump
         B_LTU   = 4'b1110, // unsigned smaller ->jump
-        B_GEU   = 4'b1111,  // unsigner bigger -> jump        
+        B_GEU   = 4'b1111  // unsigner bigger -> jump        
 
     } alu_op_type;
     
