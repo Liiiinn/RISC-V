@@ -105,7 +105,7 @@ module control(
                 control.encoding = B_TYPE;
                 control.is_branch = 1'b1;   
              unique casez ({instruction.funct3, instruction.opcode})
-                BEQ_INSTRUCTION: control.alu_op = B_BEQ; //beq
+                BEQ_INSTRUCTION: control.alu_op = ALU_SUB; //beq
                 BNE_INSTRUCTION: control.alu_op = B_BNE; //bne
                 BLT_INSTRUCTION: control.alu_op = B_BLT; //blt
                 BGE_INSTRUCTION: control.alu_op = B_BGE;
