@@ -127,6 +127,7 @@ package common;
             S_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rd} };
             B_TYPE: immediate_extension = 
                 { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]} };
+            U_TYPE : immediate_extension = {instruction[31:12], 12'b0};// add the u_type imm
             default: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
         endcase 
     endfunction
