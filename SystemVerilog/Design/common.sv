@@ -24,34 +24,24 @@ package common;
     localparam logic [9:0] BLTU_INSTRUCTION = {3'b110, 7'b1100011};
     localparam logic [9:0] BGEU_INSTRUCTION = {3'b111, 7'b1100011}; 
 
-    typedef enum logic [4:0]
+    typedef enum logic [3:0]
     {
-        ALU_AND  = 5'b00000,
-        ALU_ANDI = 5'b00001,
-        ALU_OR   = 5'b00010,
-        ALU_XOR  = 5'b00011,
-        ALU_ADD  = 5'b00100,
-        ALU_ADDI = 5'b00101,
-        ALU_LUI  = 5'b00110,
-        ALU_AUIPC = 5'b00111,
-        ALU_SUB = 5'b01000,
-        ALU_SLT = 5'b01001,  //set <
-        ALU_SLTU = 5'b01010, //set < unsigned
-        ALU_SLL = 5'b01011,  //shift left logical
-        ALU_SRL = 5'b01100,  //shift right logical
-        ALU_SRA = 5'b01101,  //shift right arithmetic
-        ALU_SLLI = 5'b01110,
-        ALU_SRLI = 5'b01111,
-        ALU_SRAI = 5'b10000, 
-        B_BEQ   = 5'b10001, // equal -> jump
-        B_BNE   = 5'b10010, // not equal ->jump
-        B_BLT   = 5'b10100, // smaller -> jump
-        B_BGE   = 5'b10101, // biger ->jump
-        B_LTU   = 5'b10110, // unsigned smaller ->jump
-        B_GEU   = 5'b10111,  // unsigner bigger -> jump
-        ALU_SLTI = 5'b11000,  //set <
-        ALU_SLTIU = 5'b11001, //set < unsigned
-        
+        ALU_AND  = 4'b0000,       
+        ALU_OR   = 4'b0001,
+        ALU_XOR  = 4'b0010,
+        ALU_ADD  = 4'b0011,               
+        ALU_SUB = 4'b0100,
+        ALU_SLT = 4'b0101,  //set <
+        ALU_SLTU = 4'b0110, //set < unsigned
+        ALU_SLL = 4'b0111,  //shift left logical
+        ALU_SRL = 4'b1000,  //shift right logical
+        ALU_SRA = 4'b1001,  //shift right arithmetic
+        B_BEQ   = 4'b1010, // equal -> jump
+        B_BNE   = 4'b1011, // not equal ->jump
+        B_BLT   = 4'b1100, // smaller -> jump
+        B_BGE   = 4'b1101, // biger ->jump
+        B_LTU   = 4'b1110, // unsigned smaller ->jump
+        B_GEU   = 4'b1111,  // unsigner bigger -> jump        
 
     } alu_op_type;
     
