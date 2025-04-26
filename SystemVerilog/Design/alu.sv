@@ -23,7 +23,7 @@ module alu(
             ALU_SLL:  result = left_operand << right_operand[4:0];
             ALU_SRL:  result = left_operand >> right_operand[4:0];
             ALU_SRA:  result = $signed(left_operand) >>> right_operand[4:0];
-            B_BEQ :  result = (left_operand == right_operand);
+ //           B_BEQ :  result = (left_operand == right_operand);
             B_BNE :  result = (left_operand != right_operand);
             B_BLT :  result = ($signed (left_operand) < $signed (right_operand));
             B_BGE :  result = ($signed (left_operand) >= $signed (right_operand));
