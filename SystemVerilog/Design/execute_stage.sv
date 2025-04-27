@@ -63,7 +63,7 @@ module execute_stage(
 
     always_comb begin: jalr_target_address
         if (control_in.encoding == J_TYPE || (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)) begin  //jalr
-            alu_data = pc_in;
+            alu_data = pc_in + 4; //write back pc+4 into register when JAL/ JALR
         end
         else begin
             alu_data = alu_result;
