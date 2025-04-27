@@ -9,7 +9,7 @@ module program_memory (
     //output logic [31:0] pc_inc
 );
 
-    logic [31:0] ram [256];
+    logic [31:0] ram [0:256];
     logic [7:0] word_address;
     
     
@@ -17,7 +17,14 @@ module program_memory (
     
     
     initial begin
-        $readmemb("instruction_mem.mem", ram);
+        //   $readmemb("instruction_mem.mem", ram);  the reading process is not functional
+        // instruction below is just for testing, temporarily
+    ram[0] = 32'b00000000001100000000000110000011; // LW x1, 3(x0)
+    ram[1] = 32'b00000000011000000000001010000011; // LW x2, 6(x0)
+    ram[2] = 32'b00000000000000000000000000010011; // NOP
+    ram[3] = 32'b00000000001000001000000110110011; // ADD x3,x1,x2
+    ram[4] = 32'b00000000000000000000000000010011; // NOP
+    ram[5] = 32'b00000000001100000010001000100011; // SW x3,8(x0)    
     end
     
     
