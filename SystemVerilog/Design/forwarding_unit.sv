@@ -2,10 +2,10 @@
 
 
 module forwarding_unit(
-    input logic [4:0] rs1_id,
-    input logic [4:0] rs2_id,
-    input logic [4:0] rd_id_ex,
-    input logic [4:0] rd_id_mem,
+    input logic [5:0] rs1_id,
+    input logic [5:0] rs2_id,
+    input logic [5:0] rd_id_ex,
+    input logic [5:0] rd_id_mem,
     input logic reg_write_ex,
     input logic reg_write_mem,
     
