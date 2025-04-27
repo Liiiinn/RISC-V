@@ -81,7 +81,7 @@ module execute_stage(
     
     assign control_out = control_in;
     assign memory_data = data2;
-    assign pc_src = (control_in.encoding == I_TYPE && control.is_branch == 1'b1) ? 
-        1'b1 : (zero_flag & control_in.is_branch);
+    assign pc_src = (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1) ? 
+        1'b1 : (zero_flag & control_in.is_branch);  
     
 endmodule
