@@ -16,7 +16,7 @@ module mem_stage(
 
     data_memory inst_mem(
         .clk(clk),        
-        .byte_address(alu_data_out),
+        .byte_address(alu_data_out[9:0]), //only use least significant 10 bits
         .write_enable(control_in.mem_write),
         .write_data(memory_data_in),
         .read_data(memory_data_out)
