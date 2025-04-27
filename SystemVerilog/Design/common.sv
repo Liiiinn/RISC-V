@@ -84,7 +84,7 @@ package common;
         
     typedef struct  packed
     {
-        //logic [31:0] pc;
+        logic [31:0] pc;
         instruction_type instruction;
     } if_id_type;
     
