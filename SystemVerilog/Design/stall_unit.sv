@@ -4,7 +4,7 @@
 module stall_unit(
     input logic [4:0] rs1_id,
     input logic [4:0] rs2_id,
-    input logic [4:0] rd_id,
+    input logic [5:0] rd_id,
     input logic mem_read,
 
     output logic pc_write,
