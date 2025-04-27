@@ -76,7 +76,7 @@ module control(
                 control.is_branch = 1'b1;
                 control.reg_write = 1'b1;
 
-                control.alu_op = ALU_ADD;
+         //       control.alu_op = ALU_ADD;
             end
             //J type, JAL
             7'b1101111: begin
@@ -84,7 +84,7 @@ module control(
                 control.is_branch = 1'b1;
                 control.reg_write = 1'b1;
 
-                control.alu_op = ALU_ADD;
+          //      control.alu_op = ALU_ADD;
             end
 
             //S type, SB, SH, SW
