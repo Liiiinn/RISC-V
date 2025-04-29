@@ -11,6 +11,8 @@ module uart_wrapper (
 );
 
     logic [31:0] byte_address_next;
+    logic en_address_increment;
+    logic en_address_increment_next;
 
     logic io_data_valid;
     logic [7:0] io_data_packet;
@@ -25,28 +27,32 @@ module uart_wrapper (
             byte_address <= 0;
             byte_counter <= 0;
             data_valid <= 0;
+            en_address_increment <= 0;
         end
         else begin
             byte_address <= byte_address_next;
             byte_counter <= byte_counter_next;
             data_valid <= data_valid_next;
+            en_address_increment <= en_address_increment_next;
         end
     end
 
     always_comb begin
+        byte_address_next = byte_address;
+        byte_counter_next = byte_counter;
         data_valid_next = 0;
 
         if (io_data_valid) begin
-            byte_address_next = byte_address + 1;
             byte_counter_next = byte_counter + 1;
+            en_address_increment_next = 1;
 
             if (byte_counter == 3) begin
                 data_valid_next = 1;
             end
-        end
-        else begin
-            byte_address_next = byte_address;
-            byte_counter_next = byte_counter;
+
+            if (en_address_increment) begin
+                byte_address_next = byte_address + 1;
+            end
         end
     end
 
@@ -62,7 +68,7 @@ module uart_wrapper (
     always_comb begin
         data_out_next = data_out;
         if (io_data_valid) begin
-            data_out_next = {io_data_packet,data_out[31:8]};
+            data_out_next = {data_out[23:0],io_data_packet};  //shift left
         end
     end
 
