@@ -39,20 +39,20 @@ module execute_stage(
         end
 
         //forwarding_selector
-        if (forward_a == 2'b10) begin
+        if (forward_a == Forward_from_ex) begin
             left_operand = mem_forward_data;
         end 
-        else if (forward_a == 2'b01) begin
+        else if (forward_a == Forward_from_mem) begin
             left_operand = wb_forward_data;
         end
         else begin  //else if (forward_a == 2'b00) wuold be better
             left_operand = data1;
         end
         
-        if (forward_b == 2'b10) begin
+        if (forward_b == Forward_from_ex) begin
             right_operand = mem_forward_data;
         end 
-        else if (forward_b == 2'b01) begin
+        else if (forward_b == Forward_from_mem) begin
             right_operand = wb_forward_data;
         end
         else begin   //else if (forward_b == 2'b00) wuold be better
