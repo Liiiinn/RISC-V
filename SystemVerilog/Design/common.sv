@@ -24,6 +24,10 @@ package common;
     localparam logic [9:0] BLTU_INSTRUCTION = {3'b110, 7'b1100011};
     localparam logic [9:0] BGEU_INSTRUCTION = {3'b111, 7'b1100011}; 
 
+    localparam logic [1:0] Forward_from_mem = 2'b01;
+    localparam logic [1:0] Forward_from_ex  = 2'b10;  
+    localparam logic [1:0] Forward_None     = 2'b00;
+
     typedef enum logic [3:0]
     {
         ALU_AND  = 4'b0000,       
