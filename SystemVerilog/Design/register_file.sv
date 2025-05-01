@@ -28,7 +28,11 @@ module register_file(
     end
 
 
-    assign read1_data = read1_id == 0 ? 0 : registers[read1_id];
-    assign read2_data = read2_id == 0 ? 0 : registers[read2_id];
+    assign read1_data = (read1_id == 0) ? 32'b0 : 
+                        (write_en && write_id == read1_id)? write_data:
+                                                            registers[read1_id];
+    assign read2_data = (read2_id == 0) ? 32'b0 : 
+                        (write_en && write_id == read2_id)? write_data :
+                                                            registers[read2_id];
 
 endmodule
