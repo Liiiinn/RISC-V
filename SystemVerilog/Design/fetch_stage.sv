@@ -17,7 +17,7 @@ module fetch_stage(
     output logic id_ex_flush
 );
 
-    logic [31:0] pc_next, pc_reg;
+    logic [31:0] pc_next, pc_reg,pc_buff1,pc_buff2;
     logic [31:0] branch_offset_0;
     logic [31:0] branch_offset_1;
     logic [31:0] branch_offset_2;
@@ -44,6 +44,23 @@ module fetch_stage(
             end
         endcase
     end
+    // add two buffer for pc_reg to save the present pc for branch jump, so that when the pc_src is available, 
+    // we use the old pc, preventing wrong branch address;
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin          
+            pc_buff1 <= 0;
+            pc_buff2 <= 0;
+        end
+        else begin
+            if(data[6:0] == B_type || data[6:0] == J_type ) begin
+                pc_buff1 <= pc_reg; //
+            end
+            else begin
+                pc_buff1 <= 0; 
+            end
+            pc_buff2 <= pc_buff1;
+        end
+    end
 
 
     always_ff @(posedge clk or negedge reset_n) begin
@@ -52,6 +69,8 @@ module fetch_stage(
             branch_offset_2 <= 0;
             prediction_1 <= 0;
             prediction_2 <= 0;
+
+            
         end
         else begin
             if(jalr_flag) begin
@@ -80,7 +99,8 @@ module fetch_stage(
     always_comb begin
         if (pc_write) begin
             if (pc_src) begin
-                pc_next = pc_reg + branch_offset_2; //branch from insturction in EX stage
+                pc_next = pc_buff2 + branch_offset_2; 
+                //branch from insturction in EX stage,create buff for pc_reg,or the branch address is not correct
             end
             else if (data[6:0] == B_type) begin
                 pc_next = prediction ? pc_reg + branch_offset_0 : pc_reg + 4; //branch prediction
