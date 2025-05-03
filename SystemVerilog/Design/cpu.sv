@@ -18,7 +18,7 @@ module cpu(
     logic stall_id_ex_flush; // Default 0
     logic fetch_prediction;
 
-    logic [31:0] program_mem_address = 0;
+    logic [31:0] program_mem_address; //delete initial value to eliminate critical path
     logic program_mem_write_enable = 0;         
     logic [31:0] program_mem_write_data = 0; 
     logic [31:0] program_mem_read_data;
