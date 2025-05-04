@@ -73,7 +73,7 @@ module uart(
                     uart_counter_next <= 0;
                     uart_state_next <= capture_data_bit;
                 end 
-            end 
+            end
                 
             capture_data_bit: 
             begin
