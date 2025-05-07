@@ -54,7 +54,7 @@ module gshare_predictor#(
         else begin
             // 更新预测器
             if (update) begin
-                // 更新 BHT 饱和计数器    use old index_d, it's matched with the intruction generating acual_taken,otherwise the bht will not change 
+                // 更新 BHT 饱和计数器    use old index_d, it's matched with the instruction generating acual_taken,otherwise the bht will not change 
                 // becuase of the updated index and ghr
                 case (bht[index_d])
                     2'b00: bht[index_d] <= actual_taken ? 2'b01 : 2'b00;// strong not taken
