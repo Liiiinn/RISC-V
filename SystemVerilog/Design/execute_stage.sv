@@ -81,7 +81,9 @@ module execute_stage(
     
     assign control_out = control_in;
     assign memory_data = data2;
-    assign pc_src = (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1) ? 
-        1'b1 : (zero_flag & control_in.is_branch);  
+  //  assign pc_src = (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1) ? 
+  //      1'b1 : (zero_flag & control_in.is_branch);  
+    assign pc_src = (control_in.encoding == B_TYPE)? (zero_flag):1'b0;  
+    // only works for b_type, j_type has no relationship with prediction;
     
 endmodule
