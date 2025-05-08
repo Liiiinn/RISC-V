@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-// not finished , still some problem ( prediction works for static 1bits predictor)
+// not finished , still some problems ( prediction works for static 1bit predictor)
 
 module gshare_predictor#(
     parameter GHR_BITS = 8,
