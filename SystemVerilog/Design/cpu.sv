@@ -69,15 +69,39 @@ module cpu(
             //if_id_reg.pc <= if_id_reg_next.pc ;
             //if_id_reg.instruction <= if_id_reg_next.instruction;
             
+            if(id_ex_flush)   //flush for id_ex reg
+             begin
+                id_ex_reg.reg_rs1_id <= '0;
+                id_ex_reg.reg_rs2_id <= '0;
+                id_ex_reg.reg_rd_id <= '0;
+                id_ex_reg.data1 <= '0;
+                id_ex_reg.data2 <= '0;
+                id_ex_reg.pc <= '0;
+                id_ex_reg.immediate_data <= '0;
+          //  id_ex_reg.control <= id_ex_reg_control_next;
+                id_ex_reg.control <= '0;              
+             end       
+             else 
+              begin
+               id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
+               id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
+               id_ex_reg.reg_rd_id <= decode_reg_rd_id;
+               id_ex_reg.data1 <= decode_data1;
+               id_ex_reg.data2 <= decode_data2;
+               id_ex_reg.pc <= decode_pc_out;
+               id_ex_reg.immediate_data <= decode_immediate_data;
+          //  id_ex_reg.control <= id_ex_reg_control_next;
+               id_ex_reg.control <= decode_control;
+              end 
             
-            id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
-            id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
-            id_ex_reg.reg_rd_id <= decode_reg_rd_id;
-            id_ex_reg.data1 <= decode_data1;
-            id_ex_reg.data2 <= decode_data2;
-            id_ex_reg.pc <= decode_pc_out;
-            id_ex_reg.immediate_data <= decode_immediate_data;
-            id_ex_reg.control <= id_ex_reg_control_next;
+         //   id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
+         //   id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
+         //   id_ex_reg.reg_rd_id <= decode_reg_rd_id;
+         //   id_ex_reg.data1 <= decode_data1;
+        //    id_ex_reg.data2 <= decode_data2;
+         //   id_ex_reg.pc <= decode_pc_out;
+        //    id_ex_reg.immediate_data <= decode_immediate_data;
+        //    id_ex_reg.control <= id_ex_reg_control_next;
             
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
@@ -106,9 +130,9 @@ module cpu(
         end
     end
 
-    always_comb begin        
-        if(id_ex_flush) begin
-            id_ex_reg_control_next = '0;
+//    always_comb begin        
+//        if(id_ex_flush) begin
+//            id_ex_reg_control_next = '0;
             
             //id_ex_reg.reg_rd_id <= 6'b0;
             //id_ex_reg.data1 <= 32'b0;
@@ -118,11 +142,11 @@ module cpu(
             //id_ex_reg.pc <= 32'b0; //add one
             //id_ex_flush <= 1'b0;
                     
-        end
-        else begin
-            id_ex_reg_control_next <= decode_control;
-        end
-    end
+ //       end
+ //       else begin
+ //           id_ex_reg_control_next <= decode_control;
+ //       end
+  //  end
 
     
     fetch_stage inst_fetch_stage(
