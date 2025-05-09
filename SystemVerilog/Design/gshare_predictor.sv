@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-// not finished , still some problems ( prediction works for static 1bit predictor)
+
 
 module gshare_predictor#(
     parameter GHR_BITS = 8,
@@ -7,7 +7,6 @@ module gshare_predictor#(
     )(
     input logic clk,
     input logic reset_n,
-
     input logic [31:0] pc,
     input logic update,            // 是否更新预测器
     input logic actual_taken,      // 实际是否跳转
@@ -20,8 +19,8 @@ module gshare_predictor#(
     logic [1:0] counter;  // counter now
     logic [7:0]pc_part;
 
-    assign pc_part = pc[GHR_BITS+1:2];
-    assign index = pc_part ^ ghr_d; //hash 低两位是为了对齐，都是0。
+    assign pc_part = pc[GHR_BITS+1:2]; //when current EXE is branch,update ==1, the pc is  not the pc generating branch 
+    assign index = pc_part ^ ghr_d; //hash only consider from bit[2]，bit[1:0] is for alignment
     assign counter = bht[index];
     assign prediction = counter[1];
     
@@ -48,14 +47,13 @@ module gshare_predictor#(
         if (!reset_n) begin
       //     ghr <= '0;
             for (int i = 0; i < BHT_SIZE; i++) begin
-                bht[i] <= 2'b01; // 默认弱不跳转
+                bht[i] <= 2'b10; // weak taken for test the flush function
             end
         end 
         else begin
             // 更新预测器
             if (update) begin
-                // 更新 BHT 饱和计数器    use old index_d, it's matched with the instruction generating acual_taken,otherwise the bht will not change 
-                // becuase of the updated index and ghr
+                // 更新 BHT 饱和计数器
                 case (bht[index_d])
                     2'b00: bht[index_d] <= actual_taken ? 2'b01 : 2'b00;// strong not taken
                     2'b01: bht[index_d] <= actual_taken ? 2'b10 : 2'b00;// weak not taken
@@ -68,7 +66,22 @@ module gshare_predictor#(
             end
         end
     end
-    
-
-    
+       
 endmodule
+
+//module gshare_predictor (
+//    input  logic [31:0] pc,     // 来自指令 data[6:0]
+//    output logic prediction        // 预测跳转 or 不跳转
+//);
+
+//    // 假设 B_type = 7'b1100011
+//    localparam B_TYPE = 7'b1100011;
+
+//    always_comb begin
+//        if (pc[6:0] == B_TYPE)
+//            prediction = 1'b1; // 总是预测跳转
+//        else
+//            prediction = 1'b0; // 非分支指令默认顺序执行
+//    end
+
+//endmodule
