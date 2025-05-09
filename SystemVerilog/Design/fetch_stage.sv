@@ -13,7 +13,7 @@ module fetch_stage(
     input [31:0] jalr_target_offset,
     input jalr_flag,
     output logic [31:0] address,
-    output logic [31:0] branch_offset,
+    output logic [31:0] pc_gshare,
     output logic if_id_flush,
     output logic id_ex_flush
 );
@@ -168,5 +168,8 @@ module fetch_stage(
         end    
    end     
     assign address = pc_reg;
-    assign branch_offset = branch_offset_2;
+    assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
+    // assign pc_gshare = pc_reg - 8                // when initial value for prediction is not taken 
+    // add a pc calculation  output  for real gshare pc ;
+ //   assign branch_offset = branch_offset_2;
 endmodule
