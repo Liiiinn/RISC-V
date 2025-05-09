@@ -13,6 +13,7 @@ module fetch_stage(
     input [31:0] jalr_target_offset,
     input jalr_flag,
     output logic [31:0] address,
+    output logic [31:0] branch_offset,
     output logic if_id_flush,
     output logic id_ex_flush
 );
@@ -103,16 +104,19 @@ module fetch_stage(
         end
         else begin
             if(data[6:0]== B_type) begin
-                prediction_1 <= prediction ; // only when it's branch we update the value of predition (otherwise,we initialize branch with "weak taken")
-                // the flush will take place at IF stage and flush everything all the time.
+                prediction_1 <= prediction ; //jalr
             end
             else begin
-                prediction_1 <= '0; //
+                prediction_1 <= '0; //jal or conditional branch
             end
             prediction_2 <= prediction_1;
       //      if_id_flush_buff <= if_id_flush;
         end
     end
+
+    
+    
+
     
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
@@ -159,9 +163,10 @@ module fetch_stage(
             id_ex_flush = 1'b0;
         end
         else begin
-            if_id_flush = 1'b1; // flush when predition is wrong 
+            if_id_flush = 1'b1; //flush if predition is wrong 
             id_ex_flush = 1'b1; //
         end    
    end     
     assign address = pc_reg;
+    assign branch_offset = branch_offset_2;
 endmodule
