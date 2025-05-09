@@ -17,6 +17,7 @@ module cpu(
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
     logic fetch_prediction;
+    logic [31:0] fetch_offset ;
 
     logic [31:0] program_mem_address; //delete initial value to eliminate critical path
     logic program_mem_write_enable = 0;         
@@ -159,6 +160,7 @@ module cpu(
         .jalr_target_offset(decode_jalr_target_offset),
         .jalr_flag(decode_jalr_flag),
         .address(program_mem_address),
+        .branch_offset(fetch_offset),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush)
     );
@@ -253,6 +255,7 @@ module cpu(
         .clk(clk),
         .reset_n(reset_n),
         .pc(program_mem_address),
+        .branch_offset(fetch_offset),
         .update(execute_control.is_branch),
         .actual_taken(pc_src),
         .prediction(fetch_prediction)
