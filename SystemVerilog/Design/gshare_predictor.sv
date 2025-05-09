@@ -8,7 +8,7 @@ module gshare_predictor#(
     input logic clk,
     input logic reset_n,
     input logic [31:0] pc,
-    input logic [31:0] branch_offset,
+  //  input logic [31:0] branch_offset,
     input logic update,            // 是否更新预测器
     input logic actual_taken,      // 实际是否跳转
     output logic prediction        // 预测结果（跳转 or 不跳转）
@@ -22,8 +22,8 @@ module gshare_predictor#(
     logic [31:0] pc_generating_branch;
 
 
-    assign pc_generating_branch = pc-branch_offset -4; //when current EXE is branch,update ==1, the pc is  not the pc generating branch 
-    assign pc_part = pc_generating_branch[GHR_BITS+1:2]; //hash bit[1:0] only used for alignment in regular instruction，
+//    assign pc_generating_branch = pc-branch_offset -4; //when current EXE is branch,update ==1, the pc is  not the pc generating branch 
+    assign pc_part = pc[GHR_BITS+1:2]; //hash bit[1:0] only used for alignment in regular instruction，
     assign index = pc_part ^ ghr_d; 
     assign counter = bht[index];
     assign prediction = counter[1];
@@ -51,7 +51,7 @@ module gshare_predictor#(
         if (!reset_n) begin
       //     ghr <= '0;
             for (int i = 0; i < BHT_SIZE; i++) begin
-                bht[i] <= 2'b10; // 默认弱不跳转
+                bht[i] <= 2'b10; // test both taken / not taken
             end
         end 
         else begin
