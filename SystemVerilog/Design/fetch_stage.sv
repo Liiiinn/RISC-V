@@ -78,8 +78,8 @@ module fetch_stage(
         if (!reset_n) begin
             branch_offset_1 <= 0;
             branch_offset_2 <= 0;
-            prediction_1 <= 0;
-            prediction_2 <= 0;
+      //      prediction_1 <= 0;
+    //        prediction_2 <= 0;
             if_id_flush_buff <= 0;
             
         end
@@ -91,12 +91,28 @@ module fetch_stage(
                 branch_offset_1 <= branch_offset_0; //jal or conditional branch
             end
             branch_offset_2 <= branch_offset_1;
-            prediction_1 <= prediction;
-            prediction_2 <= prediction_1;
             if_id_flush_buff <= if_id_flush;
         end
     end
-
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+           
+            prediction_1 <= 0;
+            prediction_2 <= 0;
+   //         if_id_flush_buff <= 0;          
+        end
+        else begin
+            if(data[6:0]== B_type) begin
+                prediction_1 <= prediction ; // only when it's branch we update the value of predition (otherwise,we initialize branch with "weak taken")
+                // the flush will take place at IF stage and flush everything all the time.
+            end
+            else begin
+                prediction_1 <= '0; //
+            end
+            prediction_2 <= prediction_1;
+      //      if_id_flush_buff <= if_id_flush;
+        end
+    end
     
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
@@ -137,16 +153,15 @@ module fetch_stage(
     end
 
 
-    always_comb begin
+    always_comb begin    
         if (pc_src == prediction_2) begin  //prediction is correct
             if_id_flush = 1'b0;
             id_ex_flush = 1'b0;
         end
         else begin
-            if_id_flush = 1'b1; //flush if branch taken
-            id_ex_flush = 1'b1; //flush if branch taken
-        end
-    end
-
+            if_id_flush = 1'b1; // flush when predition is wrong 
+            id_ex_flush = 1'b1; //
+        end    
+   end     
     assign address = pc_reg;
 endmodule
