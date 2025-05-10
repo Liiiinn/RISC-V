@@ -6,13 +6,15 @@ import common::*;
 module fetch_stage(
     input clk,
     input reset_n,
-    input [31:0] data,
+    input instruction_type data,
     input pc_src,
     input pc_write,
     input prediction,
     input [31:0] jalr_target_offset,
     input jalr_flag,
     output logic [31:0] address,
+   // output logic [31:0] branch_offset,
+  //  output logic [31:0] pc_gshare,
     output logic if_id_flush,
     output logic id_ex_flush
 );
@@ -83,17 +85,13 @@ module fetch_stage(
             if_id_flush_buff <= 0;
             
         end
-        else begin
-            if(jalr_flag) begin
-                branch_offset_1 <= jalr_target_offset; //jalr
-            end
-            else begin
-                branch_offset_1 <= branch_offset_0; //jal or conditional branch
-            end
+        else begin            
+              //  branch_offset_1 <= jalr_target_offset; //jalr
+            branch_offset_1 <= branch_offset_0; //jal or conditional branch           
             branch_offset_2 <= branch_offset_1;
             if_id_flush_buff <= if_id_flush;
         end
-    end
+  end
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
            
@@ -103,10 +101,10 @@ module fetch_stage(
         end
         else begin
             if(data[6:0]== B_type) begin
-                prediction_1 <= prediction ; //jalr
+                prediction_1 <= prediction ; 
             end
             else begin
-                prediction_1 <= '0; //jal or conditional branch
+                prediction_1 <= '0; 
             end
             prediction_2 <= prediction_1;
       //      if_id_flush_buff <= if_id_flush;
@@ -143,6 +141,9 @@ module fetch_stage(
             else if (data[6:0] == J_type) begin
                 pc_next = pc_reg + branch_offset_0; //jal
             end
+            else if(jalr_flag) begin
+                pc_next = jalr_target_offset;
+            end 
             else if (if_id_flush) begin
                 pc_next = pc_recovery;
             end
@@ -157,17 +158,18 @@ module fetch_stage(
 
 
     always_comb begin    
-        if (pc_src == prediction_2) begin  //prediction is correct
+        if (pc_src == prediction_2 && (jalr_flag!=1) ) begin  //prediction is correct and no jalr
             if_id_flush = 1'b0;
             id_ex_flush = 1'b0;
         end
         else begin
-            if_id_flush = 1'b1; //flush if branch taken
-            id_ex_flush = 1'b1; //flush if branch taken
+            if_id_flush = 1'b1; //flush when predition is not correct
+            id_ex_flush = 1'b1; //flush when predition is not correct
         end    
    end     
     assign address = pc_reg;
-   //  assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
+   // assign branch_offset = branch_offset_2;
+  //  assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
     // assign pc_gshare = pc_reg - 8 // when initial value for prediction is not taken 
     // add a pc calculation  output  for real gshare pc ;
     
