@@ -31,10 +31,8 @@ module cpu(
     logic [4:0] decode_reg_rd_id;
     logic [31:0] decode_data1;
     logic [31:0] decode_data2;
-    logic [31:0] decode_immediate_data;
-    logic [31:0] decode_jalr_target_offset;
-    logic decode_jalr_flag;
     logic [31:0] decode_pc_out;
+    logic [31:0] decode_immediate_data;
     control_type decode_control;
     
     logic [31:0] execute_alu_data;
@@ -43,6 +41,8 @@ module cpu(
     logic [1:0] execute_forwardA;
     logic [1:0] execute_forwardB;
     logic [31:0] execute_pc_out;
+    logic [31:0] execute_jalr_target_offset;
+    logic execute_jalr_flag;
     
     logic [31:0] memory_memory_data;
     logic [31:0] memory_alu_data;
@@ -153,8 +153,8 @@ module cpu(
         .pc_src(pc_src),
         .pc_write(pc_write),
         .prediction(fetch_prediction),
-        .jalr_target_offset(decode_jalr_target_offset),
-        .jalr_flag(decode_jalr_flag),
+        .jalr_target_offset(execute_jalr_target_offset),
+        .jalr_flag(execute_jalr_flag),
         .address(program_mem_address),
      //   .pc_gshare(fetch_pc_gshare),
    //     .branch_offset(fetch_offset),
@@ -186,8 +186,6 @@ module cpu(
         .read_data2(decode_data2),
         .immediate_data(decode_immediate_data),
         .pc_out(decode_pc_out),
-        .jalr_target_offset(decode_jalr_target_offset),
-        .jalr_flag(decode_jalr_flag),
         .control_signals(decode_control)
     );
     
@@ -202,11 +200,13 @@ module cpu(
         .control_in(id_ex_reg.control),
         .wb_forward_data(wb_result),
         .mem_forward_data(ex_mem_reg.alu_data),
-        .forward_a(execute_forwardA),
-        .forward_b(execute_forwardB),
+        .forward_rs1(execute_forwardA),
+        .forward_rs2(execute_forwardB),
         .control_out(execute_control),
         .alu_data(execute_alu_data),
         .memory_data(execute_memory_data),
+        .jalr_target_offset(execute_jalr_target_offset),
+        .jalr_flag(execute_jalr_flag),
         .pc_src(pc_src),
         .pc_out(execute_pc_out)
     );
@@ -235,8 +235,8 @@ module cpu(
         .rd_id_mem(mem_wb_reg.reg_rd_id),
         .reg_write_ex(ex_mem_reg.control.reg_write),
         .reg_write_mem(mem_wb_reg.control.reg_write),
-        .forward_a(execute_forwardA),
-        .forward_b(execute_forwardB)
+        .forward_rs1(execute_forwardA),
+        .forward_rs2(execute_forwardB)
     );
 
 
@@ -254,8 +254,9 @@ module cpu(
     gshare_predictor inst_gshare_predictor(
        .clk(clk),
        .reset_n(reset_n),
+  //     .pc(program_mem_address),
       // .pc(fetch_pc_gshare),
-       .pc(execute_pc_out),
+      .pc(execute_pc_out),
   //     .branch_offset(fetch_offset),
      //  .pc(program_mem_read_data),
         .update(execute_control.is_branch),
