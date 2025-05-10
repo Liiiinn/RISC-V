@@ -120,7 +120,7 @@ module cpu(
 
     always_comb begin
         if(if_id_write) begin
-            //if_id_reg_next.pc = program_mem_address;
+            if_id_reg_next.pc = program_mem_address; // should be keeped for jalr instruction
             if_id_reg_next.instruction = program_mem_read_data;  //发生了类型转换
         end
         else if(if_id_flush) begin
