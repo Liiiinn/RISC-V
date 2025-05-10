@@ -9,15 +9,15 @@ module decode_stage(
     input instruction_type instruction,
     input logic [31:0] pc_in,
     input logic write_en,
-    input logic [5:0] write_id,
+    input logic [4:0] write_id,
     input logic [31:0] write_data,
     output logic [5:0] reg_rd_id,
     output logic [31:0] read_data1,
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
-    output logic [31:0]pc_out,
-    output logic [31:0] jalr_target_offset,
-    output logic jalr_flag,
+    output logic [31:0] pc_out,
+ //   output logic [31:0] jalr_target_offset,
+ //   output logic jalr_flag,
     output control_type control_signals
 );
 
@@ -25,18 +25,18 @@ module decode_stage(
     logic [31:0] rf_read_data2;
     
     control_type controls;
-
-
-    always_comb begin
-        if (controls.encoding == I_TYPE && controls.is_branch == 1'b1) begin  //jalr
-            jalr_target_offset = (rf_read_data1 + immediate_data) & 32'hFFFFFFFE - pc_in;
-            jalr_flag = 1'b1;
-        end
-        else begin
-            jalr_target_offset = 0;
-            jalr_flag = 1'b0;
-        end
-    end
+ //   instruction_type instruction_out ;
+//remove jalr here cause we have to use forward and operation like alu_add
+//    always_comb begin
+//        if (controls.encoding == I_TYPE && controls.is_branch == 1'b1) begin  //jalr
+//            jalr_target_offset = (rf_read_data1 + immediate_data) & 32'hFFFFFFFE - pc_in;
+//            jalr_flag = 1'b1;
+//        end
+//        else begin
+//            jalr_target_offset = 0;
+//            jalr_flag = 1'b0;
+//        end
+//    end
         
 
     register_file rf_inst(
@@ -56,6 +56,7 @@ module decode_stage(
         .clk(clk), 
         .reset_n(reset_n), 
         .instruction(instruction),
+   //     .instruction_out(instruction_out),
         .control(controls)
     );
     
