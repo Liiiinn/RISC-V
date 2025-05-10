@@ -57,7 +57,6 @@ package common;
     {
         R_TYPE,
         I_TYPE,
-        I_load,
         S_TYPE,
         B_TYPE,
         U_TYPE,
@@ -75,6 +74,8 @@ package common;
         logic mem_write;
         logic reg_write;
         logic mem_to_reg;
+        logic [1:0] mem_size; // 00: byte, 01: half word, 10: word
+        logic mem_sign;
         logic is_branch;
     } control_type;
     
@@ -131,16 +132,14 @@ package common;
     } mem_wb_type;
 
 
-    function [31:0] immediate_extension(instruction_type instruction, encoding_type inst_encoding);
+    function [31:0] immediate_extension(instruction_type instruction, encoding_type inst_encoding); //TODO: instruction access method problem?
         case (inst_encoding)
             I_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
             S_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rd} };
             B_TYPE: immediate_extension = 
-                { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]},1'b0 };
-            U_TYPE : immediate_extension = {instruction[31:12], 12'b0};// add the u_type imm
-            JAL_TYPE : immediate_extension = {{12{instruction[31]}},instruction[19:12],instruction[20], instruction[30:21],1'b0 };
-            JALR_TYPE: immediate_extension = {{20{instruction[31]}},instruction[31:20]};
-            I_load : immediate_extension ={{20{instruction[31]}}, instruction[31:20]};
+                { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]} };
+            U_TYPE : immediate_extension = {instruction[31:12], 12'b0};
+            J_TYPE : immediate_extension = { {12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0 };
             default: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
         endcase 
     endfunction

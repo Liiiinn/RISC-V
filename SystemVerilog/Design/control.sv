@@ -61,13 +61,19 @@ module control(
                 control.alu_src = 1'b1;
                 control.mem_read = 1'b1;
                 control.mem_to_reg = 1'b1;
+                control.alu_op = ALU_ADD;   //lb, lh, lw, lbu, lhu
 
                 unique casez (instruction.funct3)
-                    3'b000: control.alu_op = ALU_ADD;   //lb
-                    3'b001: control.alu_op = ALU_ADD;   //lh
-                    3'b010: control.alu_op = ALU_ADD;   //lw
-                    3'b100: control.alu_op = ALU_ADD;   //lbu
-                    3'b101: control.alu_op = ALU_ADD;   //lhu
+                    3'b000: control.mem_size = 2'b00; //lb, byte
+                    3'b001: control.mem_size = 2'b01; //lh, half word
+                    3'b010: control.mem_size = 2'b10; //lw, word
+                    3'b100: control.mem_size = 2'b00; //lbu, byte
+                    3'b101: control.mem_size = 2'b01; //lhu, half word
+                endcase
+
+                unique casez (instruction.funct3)
+                    3'b0??: control.mem_sign = 1'b1; //lb, lh, lw
+                    3'b1??: control.mem_sign = 1'b0; //lbu, lhu
                 endcase
             end
 
@@ -92,11 +98,12 @@ module control(
                 control.encoding = S_TYPE;
                 control.alu_src = 1'b1;
                 control.mem_write = 1'b1;
+                control.alu_op = ALU_ADD;
 
                 unique casez (instruction.funct3)
-                    3'b000: control.alu_op = ALU_ADD;   //sb
-                    3'b001: control.alu_op = ALU_ADD;   //sh
-                    3'b010: control.alu_op = ALU_ADD;   //sw
+                    3'b000: control.mem_size = 2'b00; //sb, byte
+                    3'b001: control.mem_size = 2'b01; //sh, half word
+                    3'b010: control.mem_size = 2'b10; //sw, word
                 endcase
             end
 
@@ -105,16 +112,15 @@ module control(
                 control.encoding = B_TYPE;
                 control.is_branch = 1'b1;  
                 control.reg_write = 1'b0;
-                control.mem_write = 1'b0; 
-      //          instruction_out.rd = 0;
-             unique casez ({instruction.funct3, instruction.opcode})
-                BEQ_INSTRUCTION: control.alu_op = ALU_SUB; //beq
-                BNE_INSTRUCTION: control.alu_op = B_BNE; //bne
-                BLT_INSTRUCTION: control.alu_op = B_BLT; //blt
-                BGE_INSTRUCTION: control.alu_op = B_BGE;
-                BLTU_INSTRUCTION: control.alu_op = B_LTU;
-                BGEU_INSTRUCTION: control.alu_op = B_GEU;
-             endcase
+                control.mem_write = 1'b0;
+                unique casez ({instruction.funct3, instruction.opcode})
+                    BEQ_INSTRUCTION: control.alu_op = ALU_SUB; //beq
+                    BNE_INSTRUCTION: control.alu_op = B_BNE; //bne
+                    BLT_INSTRUCTION: control.alu_op = B_BLT; //blt
+                    BGE_INSTRUCTION: control.alu_op = B_BGE;
+                    BLTU_INSTRUCTION: control.alu_op = B_LTU;
+                    BGEU_INSTRUCTION: control.alu_op = B_GEU;
+                endcase
             end
 
             //U type, LUI

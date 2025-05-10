@@ -32,40 +32,34 @@ module execute_stage(
     logic [31:0] data2_or_imm;
 
     
-    always_comb begin: operand_selector
-        if (control_in.alu_src) begin
+    always_comb: operand_selector 
+    begin
+        if (control_in.alu_src)
             data2_or_imm = immediate_data;
-        end
-        else begin
+        else
             data2_or_imm = data2;
-        end
-        //change the name for register for readability 
+
         //forwarding_selector
-        if (forward_rs1 == Forward_from_ex) begin
+        if (forward_rs1 == Forward_from_ex)
             left_operand = mem_forward_data;
-        end 
-        else if (forward_rs1 == Forward_from_mem) begin
+        else if (forward_rs1 == Forward_from_mem)
             left_operand = wb_forward_data;
-        end
-        else begin  //else if (forward_a == 2'b00) wuold be better
+        else
             left_operand = data1;
-        end
         
-        if (forward_rs2 == Forward_from_ex) begin
+        if (forward_rs2 == Forward_from_ex)
             right_operand = mem_forward_data;
-        end 
-        else if (forward_rs2 == Forward_from_mem) begin
+        else if (forward_rs2 == Forward_from_mem)
             right_operand = wb_forward_data;
-        end
-        else begin   //else if (forward_b == 2'b00) wuold be better
+        else
             right_operand = data2_or_imm;
-        end
     end
 
-
-    always_comb begin: jalr_target_address
-        if (control_in.encoding == JALR_TYPE || (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)) begin  //jalr
-            alu_data = pc_in + 4; //write this back to register
+    always_comb: jalr_target_address
+    begin
+        if (control_in.encoding == J_TYPE || (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1))
+        begin
+            alu_data = pc_in + 4;
             jalr_flag = 1'b1;
             jalr_target_offset = left_operand + immediate_data ; // used as new pc
         end
@@ -88,6 +82,6 @@ module execute_stage(
     assign control_out = control_in;
     assign memory_data = data2;
   //  assign pc_src = (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1) ? 1'b1 : (zero_flag & control_in.is_branch);
-    assign pc_src = (control_in.encoding == B_TYPE)? (zero_flag):1'b0;  // only works for b_type, j_type has no relationship with prediction;
+    assign pc_src = (control_in.encoding == B_TYPE) ? (zero_flag) : 1'b0;  // only works for b_type, j_type has no relationship with prediction;
     assign pc_out = pc_in;
 endmodule

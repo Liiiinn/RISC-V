@@ -2,7 +2,6 @@
 
 import common::*;
 
-
 module alu(
     input wire [3:0] control,
     input wire [31:0] left_operand, 
@@ -25,16 +24,15 @@ module alu(
             ALU_SRA:  result = $signed(left_operand) >>> right_operand[4:0];
             ALU_LUI:  result = right_operand; 
  //           B_BEQ :  result = (left_operand == right_operand);
-            B_BNE :  result = (left_operand != right_operand);
-            B_BLT :  result = ($signed (left_operand) < $signed (right_operand));
-            B_BGE :  result = ($signed (left_operand) >= $signed (right_operand));
-            B_LTU :  result = (left_operand < right_operand);
-            B_GEU :  result = (left_operand >= right_operand);
+            B_BNE :   result = (left_operand != right_operand);
+            B_BLT :   result = ($signed (left_operand) < $signed (right_operand));
+            B_BGE :   result = ($signed (left_operand) >= $signed (right_operand));
+            B_LTU :   result = (left_operand < right_operand);
+            B_GEU :   result = (left_operand >= right_operand);
             default:  result = 32'b0;
         endcase
     end
-    
-    
-    assign zero_flag = 1'b1 ? result == 0 : 1'b0;
+
+    assign zero_flag = result == 0 ? 1'b1 : 1'b0;
 
 endmodule

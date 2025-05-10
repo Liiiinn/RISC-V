@@ -27,7 +27,7 @@ module register_file(
         end
     end
 
-
+    // TODO: bit width problem between write_id & read_id?
     assign read1_data = (read1_id == 0) ? 32'b0 : 
                         (write_en && write_id == read1_id)? write_data:
                                                             registers[read1_id];

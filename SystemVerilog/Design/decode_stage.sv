@@ -16,8 +16,8 @@ module decode_stage(
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
     output logic [31:0] pc_out,
- //   output logic [31:0] jalr_target_offset,
- //   output logic jalr_flag,
+    //output logic [31:0] jalr_target_offset,
+    //output logic jalr_flag,
     output control_type control_signals
 );
 
@@ -56,7 +56,6 @@ module decode_stage(
         .clk(clk), 
         .reset_n(reset_n), 
         .instruction(instruction),
-   //     .instruction_out(instruction_out),
         .control(controls)
     );
     
