@@ -8,6 +8,12 @@ package common;
     //     ALU_SUB = 3'b011
     // } alu_op_type;
     // add some global parameters
+    localparam logic [1:0] Forward_from_mem = 2'b01;
+    localparam logic [1:0] Forward_from_ex  = 2'b10;  
+    localparam logic [1:0] Forward_None     = 2'b00;
+    
+ 
+    
     localparam logic [6:0] R_type    = 7'b0110011;
     localparam logic [6:0] I_type1   = 7'b0010011;
     localparam logic [6:0] I_type_lw = 7'b0000011;
@@ -23,10 +29,6 @@ package common;
     localparam logic [9:0] BGE_INSTRUCTION = {3'b101, 7'b1100011};
     localparam logic [9:0] BLTU_INSTRUCTION = {3'b110, 7'b1100011};
     localparam logic [9:0] BGEU_INSTRUCTION = {3'b111, 7'b1100011}; 
-
-    localparam logic [1:0] Forward_from_mem = 2'b01;
-    localparam logic [1:0] Forward_from_ex  = 2'b10;  
-    localparam logic [1:0] Forward_None     = 2'b00;
 
     typedef enum logic [3:0]
     {
@@ -55,6 +57,7 @@ package common;
     {
         R_TYPE,
         I_TYPE,
+        I_load,
         S_TYPE,
         B_TYPE,
         U_TYPE,
@@ -95,32 +98,34 @@ package common;
     
     typedef struct packed
     {
-        logic [5:0] reg_rs1_id;
-        logic [5:0] reg_rs2_id;
-        logic [5:0] reg_rd_id;
+        logic [4:0] reg_rs1_id;
+        logic [4:0] reg_rs2_id;
+        logic [4:0] reg_rd_id;
         logic [31:0] data1;
         logic [31:0] data2;
         logic [31:0] immediate_data;
         logic [31:0] pc; //add new element
-
+        instruction_type instruction;
         control_type control;
     } id_ex_type;
     
 
     typedef struct packed
     {
-        logic [5:0] reg_rd_id;
+        logic [4:0] reg_rd_id;
         control_type control;
         logic [31:0] alu_data;
+        logic [31:0] pc;
         logic [31:0] memory_data;
     } ex_mem_type;
     
     
     typedef struct packed
     {
-        logic [5:0] reg_rd_id;
+        logic [4:0] reg_rd_id;
         logic [31:0] memory_data;
         logic [31:0] alu_data;
+        logic [31:0] pc;
         control_type control;
     } mem_wb_type;
 
@@ -130,9 +135,10 @@ package common;
             I_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
             S_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rd} };
             B_TYPE: immediate_extension = 
-                { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]} };
+                { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]},1'b0 };
             U_TYPE : immediate_extension = {instruction[31:12], 12'b0};// add the u_type imm
-            J_TYPE : immediate_extension = {{12{instruction[31]}},instruction[19:12],instruction[20],
+            J_TYPE : immediate_extension = {{12{instruction[31]}},instruction[19:12],instruction[20], instruction[30:21],1'b0 };
+            I_load : immediate_extension ={{20{instruction[31]}}, instruction[31:20]};
             default: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
         endcase 
     endfunction
