@@ -9,7 +9,7 @@ module execute_stage(
     input [31:0] data1,
     input [31:0] data2,
     input [31:0] immediate_data,
-    input [31:0] pc_in,
+    input logic [31:0] pc_in,
     input control_type control_in,
     input logic [31:0] wb_forward_data,
     input logic [31:0] mem_forward_data,
@@ -18,8 +18,8 @@ module execute_stage(
     output control_type control_out,
     output logic [31:0] alu_data,
     output logic [31:0] memory_data,
-    output logic pc_src
-    //output logic [31:0] jalr_target_address
+    output logic pc_src,
+    output logic [31:0] pc_out
 );
 
     logic zero_flag;
@@ -63,7 +63,7 @@ module execute_stage(
 
     always_comb begin: jalr_target_address
         if (control_in.encoding == J_TYPE || (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)) begin  //jalr
-            alu_data = pc_in + 4; //write back pc+4 into register when JAL/ JALR
+            alu_data = pc_in + 4;
         end
         else begin
             alu_data = alu_result;
@@ -81,9 +81,7 @@ module execute_stage(
     
     assign control_out = control_in;
     assign memory_data = data2;
-  //  assign pc_src = (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1) ? 
-  //      1'b1 : (zero_flag & control_in.is_branch);  
-    assign pc_src = (control_in.encoding == B_TYPE)? (zero_flag):1'b0;  
-    // only works for b_type, j_type has no relationship with prediction;
-    
+  //  assign pc_src = (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1) ? 1'b1 : (zero_flag & control_in.is_branch);
+    assign pc_src = (control_in.encoding == B_TYPE)? (zero_flag):1'b0;  // only works for b_type, j_type has no relationship with prediction;
+    assign pc_out = pc_in;
 endmodule
