@@ -7,6 +7,7 @@ module control(
     input clk,
     input reset_n,
     input instruction_type instruction, 
+  //  output instruction_type instruction_out,
     output control_type control
 );  
     
@@ -72,19 +73,18 @@ module control(
 
             //I type, JALR
             7'b1100111: begin
-                control.encoding = I_TYPE;
-                control.is_branch = 1'b0;
-                control.reg_write = 1'b0;
-
-         //       control.alu_op = ALU_ADD;
+                control.encoding = JALR_TYPE;
+                control.is_branch = 1'b1;
+                control.reg_write = 1'b1;
+                control.alu_op = ALU_ADD; // put jalr here, bacuase we need forwarding when register hazard.jalr is related to registers.
             end
             //J type, JAL
             7'b1101111: begin
-                control.encoding = J_TYPE;
+                control.encoding = JAL_TYPE;
                 control.is_branch = 1'b0;
                 control.reg_write = 1'b0;
-
-          //      control.alu_op = ALU_ADD;
+        //        instruction_out.rd = 0;
+//                control.alu_op = ALU_ADD;
             end
 
             //S type, SB, SH, SW
@@ -103,7 +103,10 @@ module control(
             //B type, BEQ, BNE, BLT, BGE, BLTU, BGEU
             B_type: begin
                 control.encoding = B_TYPE;
-                control.is_branch = 1'b1;   
+                control.is_branch = 1'b1;  
+                control.reg_write = 1'b0;
+                control.mem_write = 1'b0; 
+      //          instruction_out.rd = 0;
              unique casez ({instruction.funct3, instruction.opcode})
                 BEQ_INSTRUCTION: control.alu_op = ALU_SUB; //beq
                 BNE_INSTRUCTION: control.alu_op = B_BNE; //bne
