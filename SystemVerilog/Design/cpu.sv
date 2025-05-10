@@ -6,7 +6,8 @@ import common::*;
 module cpu(
     input clk,
     input reset_n,
-    input io_rx
+    input io_rx,
+    output [31:0] alu_out
 );
 
     logic pc_src;
@@ -17,16 +18,17 @@ module cpu(
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
     logic fetch_prediction;
-    logic [31:0] fetch_pc_gshare ;
+  //  logic [31:0]fetch_pc_gshare;
 
-    logic [31:0] program_mem_address; //delete initial value to eliminate critical path
+    logic [31:0] program_mem_address;
     logic program_mem_write_enable = 0;         
     logic [31:0] program_mem_write_data = 0; 
     logic [31:0] program_mem_read_data;
-    //logic [31:0] program_mem_pc_input;
+    logic [31:0] program_mem_pc_input= 0;
+   // logic [31:0] fetch_offset = 0;
     //logic [31:0] pc_inc; // add one
     
-    logic [5:0] decode_reg_rd_id;
+    logic [4:0] decode_reg_rd_id;
     logic [31:0] decode_data1;
     logic [31:0] decode_data2;
     logic [31:0] decode_immediate_data;
@@ -40,13 +42,14 @@ module cpu(
     logic [31:0] execute_memory_data;
     logic [1:0] execute_forwardA;
     logic [1:0] execute_forwardB;
-    //logic [31:0] execute_mem_branch_addresss;
+    logic [31:0] execute_pc_out;
     
     logic [31:0] memory_memory_data;
     logic [31:0] memory_alu_data;
+    logic [31:0] memory_pc_out;
     control_type memory_control;
     
-    logic [5:0] wb_reg_rd_id;
+    logic [4:0] wb_reg_rd_id;
     logic [31:0] wb_result;
     logic wb_write_back_en;
     
@@ -70,7 +73,7 @@ module cpu(
             //if_id_reg.pc <= if_id_reg_next.pc ;
             //if_id_reg.instruction <= if_id_reg_next.instruction;
             
-            if(id_ex_flush)   //flush for id_ex reg
+             if(id_ex_flush) 
              begin
                 id_ex_reg.reg_rs1_id <= '0;
                 id_ex_reg.reg_rs2_id <= '0;
@@ -93,34 +96,26 @@ module cpu(
                id_ex_reg.immediate_data <= decode_immediate_data;
           //  id_ex_reg.control <= id_ex_reg_control_next;
                id_ex_reg.control <= decode_control;
-              end 
-            
-         //   id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
-         //   id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
-         //   id_ex_reg.reg_rd_id <= decode_reg_rd_id;
-         //   id_ex_reg.data1 <= decode_data1;
-        //    id_ex_reg.data2 <= decode_data2;
-         //   id_ex_reg.pc <= decode_pc_out;
-        //    id_ex_reg.immediate_data <= decode_immediate_data;
-        //    id_ex_reg.control <= id_ex_reg_control_next;
-            
+              end             
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
             ex_mem_reg.alu_data <= execute_alu_data;
             ex_mem_reg.memory_data <= execute_memory_data;
+            ex_mem_reg.pc      <= execute_pc_out;
             //execute_mem_branch_addresss <= execute_jump_address;
             
             mem_wb_reg.reg_rd_id <= ex_mem_reg.reg_rd_id;
             mem_wb_reg.memory_data <= memory_memory_data;
             mem_wb_reg.alu_data <= memory_alu_data;
             mem_wb_reg.control <= memory_control;
+            mem_wb_reg.pc <= memory_pc_out;
         end
     end
 
 
     always_comb begin
         if(if_id_write) begin
-            if_id_reg_next.pc = program_mem_address; // should be keeped for jalr instruction
+            if_id_reg_next.pc = program_mem_address;
             if_id_reg_next.instruction = program_mem_read_data;  //发生了类型转换
         end
         else if(if_id_flush) begin
@@ -135,32 +130,34 @@ module cpu(
 //        if(id_ex_flush) begin
 //            id_ex_reg_control_next = '0;
             
-            //id_ex_reg.reg_rd_id <= 6'b0;
-            //id_ex_reg.data1 <= 32'b0;
-            //id_ex_reg.data2 <= 32'b0;
-            //id_ex_reg.immediate_data <= 32'b0;
-            //id_ex_reg.control <= 0;
-            //id_ex_reg.pc <= 32'b0; //add one
-            //id_ex_flush <= 1'b0;
+//            id_ex_reg.reg_rd_id <= 6'b0;
+//            id_ex_reg.data1 <= 32'b0;
+//            id_ex_reg.data2 <= 32'b0;
+//            id_ex_reg.immediate_data <= 32'b0;
+//    //        id_ex_reg.control <= 0;
+//            id_ex_reg.pc <= 32'b0; //add one
+//            //id_ex_flush <= 1'b0;
                     
- //       end
- //       else begin
- //           id_ex_reg_control_next <= decode_control;
- //       end
-  //  end
+//        end
+//        else begin
+//            id_ex_reg_control_next <= decode_control;
+//        end
+//    end
 
     
     fetch_stage inst_fetch_stage(
         .clk(clk), 
         .reset_n(reset_n),
-        .data(program_mem_read_data),
+     //   .data(program_mem_read_data),// input
+        .data(if_id_reg_next.instruction),
         .pc_src(pc_src),
         .pc_write(pc_write),
         .prediction(fetch_prediction),
         .jalr_target_offset(decode_jalr_target_offset),
         .jalr_flag(decode_jalr_flag),
         .address(program_mem_address),
-        .pc_gshare(fetch_pc_gshare),
+     //   .pc_gshare(fetch_pc_gshare),
+   //     .branch_offset(fetch_offset),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush)
     );
@@ -168,11 +165,10 @@ module cpu(
 
     program_memory inst_mem(
         .clk(clk),        
-      //  .byte_address(program_mem_pc_input),//加assign选择from pc or from uart
-        .byte_address(program_mem_address),
+        .byte_address(program_mem_address),//加assign选择from pc or from uart
         .write_enable(program_mem_write_enable),
         .write_data(program_mem_write_data),
-        .read_data(program_mem_read_data)
+        .read_data(program_mem_read_data) // output
         //.pc_inc(pc_inc)
     );
     
@@ -211,26 +207,30 @@ module cpu(
         .control_out(execute_control),
         .alu_data(execute_alu_data),
         .memory_data(execute_memory_data),
-        .pc_src(pc_src)
-        //.jalr_target_address(execute_jalr_target_address)
+        .pc_src(pc_src),
+        .pc_out(execute_pc_out)
     );
     
     
     mem_stage inst_mem_stage(
         .clk(clk), 
         .reset_n(reset_n),
+        .pc_in(ex_mem_reg.pc),
         .alu_data_in(ex_mem_reg.alu_data),
         .memory_data_in(ex_mem_reg.memory_data),
         .control_in(ex_mem_reg.control),
         .control_out(memory_control),
         .memory_data_out(memory_memory_data),
-        .alu_data_out(memory_alu_data)
+        .alu_data_out(memory_alu_data),
+        .pc_out(memory_pc_out)
     );
 
 
     forwarding_unit inst_forwarding_unit(
         .rs1_id(id_ex_reg.reg_rs1_id),
         .rs2_id(id_ex_reg.reg_rs2_id),
+//        .instruction(ex_mem_reg.pc),
+//        .mem_wb_write(mem_wb_reg.control.)
         .rd_id_ex(ex_mem_reg.reg_rd_id),
         .rd_id_mem(mem_wb_reg.reg_rd_id),
         .reg_write_ex(ex_mem_reg.control.reg_write),
@@ -252,10 +252,12 @@ module cpu(
 
 
     gshare_predictor inst_gshare_predictor(
-        .clk(clk),
-        .reset_n(reset_n),
-        .pc(fetch_pc_gshare),
-      //  .branch_offset(fetch_offset),
+       .clk(clk),
+       .reset_n(reset_n),
+      // .pc(fetch_pc_gshare),
+       .pc(execute_pc_out),
+  //     .branch_offset(fetch_offset),
+     //  .pc(program_mem_read_data),
         .update(execute_control.is_branch),
         .actual_taken(pc_src),
         .prediction(fetch_prediction)
@@ -266,4 +268,5 @@ module cpu(
     assign wb_write_back_en = mem_wb_reg.control.reg_write;
     assign wb_result = mem_wb_reg.control.mem_read ? mem_wb_reg.memory_data : mem_wb_reg.alu_data;
     assign id_ex_flush = branch_id_ex_flush | stall_id_ex_flush;
+    assign alu_out = execute_alu_data;
 endmodule
