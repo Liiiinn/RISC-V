@@ -13,7 +13,6 @@ module fetch_stage(
     input [31:0] jalr_target_offset,
     input jalr_flag,
     output logic [31:0] address,
-    output logic [31:0] pc_gshare,
     output logic if_id_flush,
     output logic id_ex_flush
 );
@@ -98,8 +97,8 @@ module fetch_stage(
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
            
-            prediction_1 <= 0;
-            prediction_2 <= 0;
+            prediction_1 <= '0;
+            prediction_2 <= '0;
    //         if_id_flush_buff <= 0;          
         end
         else begin
@@ -163,13 +162,13 @@ module fetch_stage(
             id_ex_flush = 1'b0;
         end
         else begin
-            if_id_flush = 1'b1; //flush if predition is wrong 
-            id_ex_flush = 1'b1; //
+            if_id_flush = 1'b1; //flush if branch taken
+            id_ex_flush = 1'b1; //flush if branch taken
         end    
    end     
     assign address = pc_reg;
-    assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
-    // assign pc_gshare = pc_reg - 8                // when initial value for prediction is not taken 
+   //  assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
+    // assign pc_gshare = pc_reg - 8 // when initial value for prediction is not taken 
     // add a pc calculation  output  for real gshare pc ;
- //   assign branch_offset = branch_offset_2;
+    
 endmodule
