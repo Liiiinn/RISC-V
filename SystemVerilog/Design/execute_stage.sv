@@ -57,7 +57,7 @@ module execute_stage(
 
     always_comb: jalr_target_address
     begin
-        if (control_in.encoding == J_TYPE || (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1))
+        if (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)
         begin
             alu_data = pc_in + 4;
             jalr_flag = 1'b1;
