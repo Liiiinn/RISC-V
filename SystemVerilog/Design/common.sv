@@ -60,8 +60,7 @@ package common;
         S_TYPE,
         B_TYPE,
         U_TYPE,
-        JAL_TYPE,
-        JALR_TYPE
+        J_TYPE      
     } encoding_type;
     
     
@@ -137,7 +136,7 @@ package common;
             I_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
             S_TYPE: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rd} };
             B_TYPE: immediate_extension = 
-                { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]} };
+            { {20{instruction.funct7[6]}}, {instruction.funct7[6], instruction.rd[0], instruction.funct7[5:0], instruction.rd[4:1]}，1'b0};
             U_TYPE : immediate_extension = {instruction[31:12], 12'b0};
             J_TYPE : immediate_extension = { {12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0 };
             default: immediate_extension = { {20{instruction.funct7[6]}}, {instruction.funct7, instruction.rs2} };
