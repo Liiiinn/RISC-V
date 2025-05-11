@@ -1,3 +1,4 @@
+
 `timescale 1ns / 1ps
 
 import common::*;
@@ -25,8 +26,8 @@ module fetch_stage(
     logic [31:0] branch_offset_2;
     logic prediction_1;
     logic prediction_2;
-    logic if_id_flush_buff;
-            
+ //   logic if_id_flush_buff;
+    encoding_type inst_encode;        
         
     always_comb begin
         //if (data[6:0] == B_type) begin
@@ -35,18 +36,25 @@ module fetch_stage(
         //else begin
         //    branch_offset_0 = 0;
         //end
-        case (data[6:0])
-            B_type: begin
-                branch_offset_0 = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0}; //Btype
-            end
-            J_type: begin
-                branch_offset_0 = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
-            end
-            default: begin
-                branch_offset_0 = 0;
-            end
-        endcase
-    end
+//        case (data[6:0])
+//            B_type: begin
+//                branch_offset_0 = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0}; //Btype
+//            end
+//            J_type: begin
+//                branch_offset_0 = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
+//            end
+//            default: begin
+//                branch_offset_0 = 0;
+//            end
+//        endcase
+          case (data[6:0])
+           B_type: inst_encode = B_TYPE;
+           J_type: inst_encode = J_TYPE;
+           default: inst_encode = R_TYPE;
+           endcase
+         branch_offset_0 = immediate_extension(data,inst_encode);  
+  
+       end
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin          
             pc_buff1 <= 0;
@@ -80,16 +88,14 @@ module fetch_stage(
         if (!reset_n) begin
             branch_offset_1 <= 0;
             branch_offset_2 <= 0;
-      //      prediction_1 <= 0;
-    //        prediction_2 <= 0;
-            if_id_flush_buff <= 0;
+    //        if_id_flush_buff <= 0;
             
         end
         else begin            
               //  branch_offset_1 <= jalr_target_offset; //jalr
             branch_offset_1 <= branch_offset_0; //jal or conditional branch           
             branch_offset_2 <= branch_offset_1;
-            if_id_flush_buff <= if_id_flush;
+     //       if_id_flush_buff <= if_id_flush;
         end
   end
     always_ff @(posedge clk or negedge reset_n) begin
