@@ -79,14 +79,14 @@ module control(
 
             //I type, JALR
             7'b1100111: begin
-                control.encoding = JALR_TYPE;
+                control.encoding = I_TYPE;
                 control.is_branch = 1'b1;
                 control.reg_write = 1'b1;
                 control.alu_op = ALU_ADD; // put jalr here, bacuase we need forwarding when register hazard.jalr is related to registers.
             end
             //J type, JAL
             7'b1101111: begin
-                control.encoding = JAL_TYPE;
+                control.encoding = J_TYPE;
                 control.is_branch = 1'b0;
                 control.reg_write = 1'b0;
         //        instruction_out.rd = 0;
