@@ -7,7 +7,7 @@ module register_file(
     input write_en,
     input [4:0] read1_id,
     input [4:0] read2_id,
-    input [5:0] write_id,
+    input [4:0] write_id,
     input [31:0] write_data,
     output logic [31:0] read1_data,
     output logic [31:0] read2_data
