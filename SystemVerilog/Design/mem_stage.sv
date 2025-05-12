@@ -21,6 +21,8 @@ module mem_stage(
         .byte_address(alu_data_out[9:0]),
         .write_enable(control_in.mem_write),
         .write_data(memory_data_in),
+        .mem_size(control_in.mem_size),
+        .mem_sign(control_in.mem_sign),
         .read_data(memory_data_out)
     );
     
