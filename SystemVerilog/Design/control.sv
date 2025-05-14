@@ -7,7 +7,6 @@ module control(
     input clk,
     input reset_n,
     input instruction_type instruction, 
-  //  output instruction_type instruction_out,
     output control_type control
 );  
     

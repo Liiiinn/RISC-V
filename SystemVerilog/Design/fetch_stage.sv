@@ -14,56 +14,58 @@ module fetch_stage(
     input [31:0] jalr_target_offset,
     input jalr_flag,
     output logic [31:0] address,
-   // output logic [31:0] branch_offset,
-  //  output logic [31:0] pc_gshare,
+    // output logic [31:0] branch_offset,
+    // output logic [31:0] pc_gshare,
     output logic if_id_flush,
     output logic id_ex_flush
 );
 
-    logic [31:0] pc_next, pc_reg,pc_buff1,pc_buff2,pc_recovery;
+    logic [31:0] pc_next, pc_reg, pc_buff1, pc_buff2, pc_recovery;
     logic [31:0] branch_offset_0;
     logic [31:0] branch_offset_1;
     logic [31:0] branch_offset_2;
     logic prediction_1;
     logic prediction_2;
- //   logic if_id_flush_buff;
+    // logic if_id_flush_buff;
     encoding_type inst_encode;        
         
     always_comb begin
-        //if (data[6:0] == B_type) begin
-        //    branch_offset_0 = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0};
-        //end
-        //else begin
-        //    branch_offset_0 = 0;
-        //end
-//        case (data[6:0])
-//            B_type: begin
-//                branch_offset_0 = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0}; //Btype
-//            end
-//            J_type: begin
-//                branch_offset_0 = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
-//            end
-//            default: begin
-//                branch_offset_0 = 0;
-//            end
-//        endcase
-          case (data[6:0])
-           B_type: inst_encode = B_TYPE;
-           J_type: inst_encode = J_TYPE;
-           default: inst_encode = R_TYPE;
-           endcase
-         branch_offset_0 = immediate_extension(data,inst_encode);  
-  
-       end
+        // if (data[6:0] == B_type) begin
+        //     branch_offset_0 = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0};
+        // end
+        // else begin
+        //     branch_offset_0 = 0;
+        // end
+
+        // case (data[6:0])
+        //     B_type: begin
+        //         branch_offset_0 = {{19{data[31]}}, data[31], data[7], data[30:25], data[11:8], 1'b0}; //Btype
+        //     end
+        //     J_type: begin
+        //         branch_offset_0 = {{11{data[31]}}, data[31], data[19:12], data[20], data[30:21], 1'b0}; //Jal
+        //     end
+        //     default: begin
+        //         branch_offset_0 = 0;
+        //     end
+        // endcase
+
+        case (data.opcode)
+            B_type: inst_encode = B_TYPE;
+            J_type: inst_encode = J_TYPE;
+            default: inst_encode = R_TYPE;
+        endcase
+
+        branch_offset_0 = immediate_extension(data, inst_encode);
+    end
+
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin          
             pc_buff1 <= 0;
             pc_buff2 <= 0;
-            
         end
         else begin
-            if(data[6:0] == B_type || data[6:0] == J_type ) begin
-                pc_buff1 <= pc_reg; //
+            if(data.opcode == B_type || data.opcode == J_type ) begin
+                pc_buff1 <= pc_reg;
             end
             else begin
                 pc_buff1 <= 0; 
@@ -71,63 +73,57 @@ module fetch_stage(
             pc_buff2 <= pc_buff1;
         end
     end
-  always_ff @(posedge clk or negedge reset_n)
-     begin
-         if(!reset_n)
-           begin
-             pc_recovery <= 0;
-           end
-         else 
-            begin
-              if(data[6:0] == B_type && prediction)
-                  pc_recovery <= pc_reg +4;
-            end
+
+    always_ff @(posedge clk or negedge reset_n)
+    begin
+        if(!reset_n)
+        begin
+            pc_recovery <= 0;
+        end
+        else begin
+            if(data.opcode == B_type && prediction)
+                pc_recovery <= pc_reg +4;
+        end
     end
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             branch_offset_1 <= 0;
             branch_offset_2 <= 0;
-    //        if_id_flush_buff <= 0;
-            
+            // if_id_flush_buff <= 0;    
         end
         else begin            
               //  branch_offset_1 <= jalr_target_offset; //jalr
             branch_offset_1 <= branch_offset_0; //jal or conditional branch           
             branch_offset_2 <= branch_offset_1;
-     //       if_id_flush_buff <= if_id_flush;
+            // if_id_flush_buff <= if_id_flush;
         end
-  end
+    end
+
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
            
             prediction_1 <= '0;
             prediction_2 <= '0;
-   //         if_id_flush_buff <= 0;          
+            // if_id_flush_buff <= 0;          
         end
         else begin
-            if(data[6:0]== B_type) begin
+            if(data.opcode == B_type)
                 prediction_1 <= prediction ; 
-            end
-            else begin
+            else
                 prediction_1 <= '0; 
-            end
+            
             prediction_2 <= prediction_1;
-      //      if_id_flush_buff <= if_id_flush;
+            // if_id_flush_buff <= if_id_flush;
         end
     end
 
     
-    
-
-    
     always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
+        if (!reset_n)
             pc_reg <= 0;
-        end
-        else begin
+        else
             pc_reg <= pc_next;
-        end 
     end
 
 
@@ -141,10 +137,10 @@ module fetch_stage(
             else if (pc_src && !prediction_2) begin
                pc_next = pc_buff2 + branch_offset_2; // when not taken, just jump directly;
             end
-            else if (data[6:0] == B_type) begin
+            else if (data.opcode == B_type) begin
                 pc_next = prediction ? pc_reg + branch_offset_0 : pc_reg + 4; //branch prediction              
             end
-            else if (data[6:0] == J_type) begin
+            else if (data.opcode == J_type) begin
                 pc_next = pc_reg + branch_offset_0; //jal
             end
             else if(jalr_flag) begin
@@ -162,7 +158,6 @@ module fetch_stage(
         end
     end
 
-
     always_comb begin    
         if (pc_src == prediction_2 && (jalr_flag!=1) ) begin  //prediction is correct and no jalr
             if_id_flush = 1'b0;
@@ -174,8 +169,8 @@ module fetch_stage(
         end    
    end     
     assign address = pc_reg;
-   // assign branch_offset = branch_offset_2;
-  //  assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
+    // assign branch_offset = branch_offset_2;
+    //  assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
     // assign pc_gshare = pc_reg - 8 // when initial value for prediction is not taken 
     // add a pc calculation  output  for real gshare pc ;
     
