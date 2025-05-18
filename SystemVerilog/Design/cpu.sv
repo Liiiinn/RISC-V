@@ -18,16 +18,20 @@ module cpu(
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
     logic fetch_prediction;
-  //  logic [31:0]fetch_pc_gshare;
+    // logic [31:0]fetch_pc_gshare;
 
     logic [31:0] program_mem_address;
     logic program_mem_write_enable = 0;         
     logic [31:0] program_mem_write_data = 0; 
-    logic [31:0] program_mem_read_data;
+    // logic [31:0] program_mem_read_data;
+    logic [31:0] program_mem_current_data;
+    logic [31:0] program_mem_next_data;
     logic [31:0] program_mem_pc_input= 0;
-   // logic [31:0] fetch_offset = 0;
-    //logic [31:0] pc_inc; // add one
+    // logic [31:0] fetch_offset = 0;
+    // logic [31:0] pc_inc; // add one
     
+    logic [31:0] uncompressed_instr;
+
     logic [4:0] decode_reg_rd_id;
     logic [31:0] decode_data1;
     logic [31:0] decode_data2;
@@ -73,8 +77,8 @@ module cpu(
             //if_id_reg.pc <= if_id_reg_next.pc ;
             //if_id_reg.instruction <= if_id_reg_next.instruction;
             
-             if(id_ex_flush) 
-             begin
+            if(id_ex_flush) 
+            begin
                 id_ex_reg.reg_rs1_id <= '0;
                 id_ex_reg.reg_rs2_id <= '0;
                 id_ex_reg.reg_rd_id <= '0;
@@ -82,26 +86,25 @@ module cpu(
                 id_ex_reg.data2 <= '0;
                 id_ex_reg.pc <= '0;
                 id_ex_reg.immediate_data <= '0;
-          //  id_ex_reg.control <= id_ex_reg_control_next;
+                // id_ex_reg.control <= id_ex_reg_control_next;
                 id_ex_reg.control <= '0;              
-             end       
-             else 
-              begin
-               id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
-               id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
-               id_ex_reg.reg_rd_id <= decode_reg_rd_id;
-               id_ex_reg.data1 <= decode_data1;
-               id_ex_reg.data2 <= decode_data2;
-               id_ex_reg.pc <= decode_pc_out;
-               id_ex_reg.immediate_data <= decode_immediate_data;
-          //  id_ex_reg.control <= id_ex_reg_control_next;
-               id_ex_reg.control <= decode_control;
-              end             
+            end       
+            else begin
+                id_ex_reg.reg_rs1_id <= if_id_reg.instruction.rs1;
+                id_ex_reg.reg_rs2_id <= if_id_reg.instruction.rs2;
+                id_ex_reg.reg_rd_id <= decode_reg_rd_id;
+                id_ex_reg.data1 <= decode_data1;
+                id_ex_reg.data2 <= decode_data2;
+                id_ex_reg.pc <= decode_pc_out;
+                id_ex_reg.immediate_data <= decode_immediate_data;
+                // id_ex_reg.control <= id_ex_reg_control_next;
+                id_ex_reg.control <= decode_control;
+            end             
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
             ex_mem_reg.alu_data <= execute_alu_data;
             ex_mem_reg.memory_data <= execute_memory_data;
-            ex_mem_reg.pc      <= execute_pc_out;
+            ex_mem_reg.pc <= execute_pc_out;
             //execute_mem_branch_addresss <= execute_jump_address;
             
             mem_wb_reg.reg_rd_id <= ex_mem_reg.reg_rd_id;
@@ -116,7 +119,7 @@ module cpu(
     always_comb begin
         if(if_id_write) begin
             if_id_reg_next.pc = program_mem_address;
-            if_id_reg_next.instruction = program_mem_read_data;  //发生了类型转换
+            if_id_reg_next.instruction = uncompressed_instr; //type transform
         end
         else if(if_id_flush) begin
             if_id_reg_next = '0;
@@ -148,16 +151,19 @@ module cpu(
     fetch_stage inst_fetch_stage(
         .clk(clk), 
         .reset_n(reset_n),
-     //   .data(program_mem_read_data),// input
+        // .data(program_mem_read_data),// input
         .data(if_id_reg_next.instruction),
         .pc_src(pc_src),
         .pc_write(pc_write),
         .prediction(fetch_prediction),
         .jalr_target_offset(execute_jalr_target_offset),
         .jalr_flag(execute_jalr_flag),
+        .current_word(program_mem_current_data),
+        .next_word(program_mem_next_data),
         .address(program_mem_address),
-     //   .pc_gshare(fetch_pc_gshare),
-   //     .branch_offset(fetch_offset),
+        // .pc_gshare(fetch_pc_gshare),
+        // .branch_offset(fetch_offset),
+        .instruction_out(uncompressed_instr),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush)
     );
@@ -165,11 +171,13 @@ module cpu(
 
     program_memory inst_mem(
         .clk(clk),        
-        .byte_address(program_mem_address),//加assign选择from pc or from uart
+        .byte_address(program_mem_address), //from pc or from uart
         .write_enable(program_mem_write_enable),
         .write_data(program_mem_write_data),
-        .read_data(program_mem_read_data) // output
-        //.pc_inc(pc_inc)
+        // .read_data(program_mem_read_data) // output
+        // .pc_inc(pc_inc)
+        .curr_read_data(program_mem_current_data),
+        .next_read_data(program_mem_next_data)
     );
     
     
@@ -229,8 +237,8 @@ module cpu(
     forwarding_unit inst_forwarding_unit(
         .rs1_id(id_ex_reg.reg_rs1_id),
         .rs2_id(id_ex_reg.reg_rs2_id),
-//        .instruction(ex_mem_reg.pc),
-//        .mem_wb_write(mem_wb_reg.control.)
+        // .instruction(ex_mem_reg.pc),
+        // .mem_wb_write(mem_wb_reg.control.)
         .rd_id_ex(ex_mem_reg.reg_rd_id),
         .rd_id_mem(mem_wb_reg.reg_rd_id),
         .reg_write_ex(ex_mem_reg.control.reg_write),
@@ -252,13 +260,13 @@ module cpu(
 
 
     gshare_predictor inst_gshare_predictor(
-       .clk(clk),
-       .reset_n(reset_n),
-  //     .pc(program_mem_address),
-      // .pc(fetch_pc_gshare),
-      .pc(execute_pc_out),
-  //     .branch_offset(fetch_offset),
-     //  .pc(program_mem_read_data),
+        .clk(clk),
+        .reset_n(reset_n),
+        // .pc(program_mem_address),
+        // .pc(fetch_pc_gshare),
+        .pc(execute_pc_out),
+        // .branch_offset(fetch_offset),
+        // .pc(program_mem_read_data),
         .update(execute_control.is_branch),
         .actual_taken(pc_src),
         .prediction(fetch_prediction)

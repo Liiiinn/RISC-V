@@ -1,14 +1,13 @@
 `timescale 1ns / 1ps
 
-
-module gshare_predictor#(
+module gshare_predictor #(
     parameter GHR_BITS = 8,
     parameter BHT_SIZE = 256
     )(
     input logic clk,
     input logic reset_n,
     input logic [31:0] pc,
-  //  input logic [31:0] branch_offset,
+    // input logic [31:0] branch_offset,
     input logic update,            // 是否更新预测器
     input logic actual_taken,      // 实际是否跳转
     output logic prediction        // 预测结果（跳转 or 不跳转）
@@ -18,34 +17,33 @@ module gshare_predictor#(
     logic [1:0] bht [0:BHT_SIZE-1];  // Branch History Table   
     logic [$clog2(BHT_SIZE)-1:0] index;// BHT index
     logic [1:0] counter;  // counter now
-    logic [7:0]pc_part;
+    logic [7:0] pc_part;
     logic [31:0] pc_generating_branch;
 
 
-//    assign pc_generating_branch = pc-branch_offset -4; //when current EXE is branch,update ==1, the pc is  not the pc generating branch 
-    assign pc_part = pc[GHR_BITS+1:2]; //hash bit[1:0] only used for alignment in regular instruction，
+    // assign pc_generating_branch = pc-branch_offset -4; //when current EXE is branch,update ==1, the pc is  not the pc generating branch 
+    assign pc_part = pc[GHR_BITS + 1 : 2]; //hash bit[1:0] only used for alignment in regular instruction，
     assign index = pc_part ^ ghr_d; 
     assign counter = bht[index];
     assign prediction = counter[1];
     
- always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
-            ghr <= '0;
-            ghr_d <= '0;
-          //  index_d <= '0;
-        end else begin
-            ghr_d <= ghr;
-        //    index_d <= index;
-            if (update) begin
-                ghr <= {ghr[GHR_BITS-2:0], actual_taken};
- //               index <= (pc[GHR_BITS+1:2]) ^ ghr;
+    always_ff @(posedge clk or negedge reset_n) begin
+            if (!reset_n) begin
+                ghr <= '0;
+                ghr_d <= '0;
+                // index_d <= '0;
+            end else begin
+                ghr_d <= ghr;
+                // index_d <= index;
+                if (update) begin
+                    ghr <= {ghr[GHR_BITS - 2 : 0], actual_taken};
+                    // index <= (pc[GHR_BITS+1:2]) ^ ghr;
+                end
             end
         end
-    end
   
-  integer i;
+    integer i;
   
-    
     // 初始化和读出当前计数器值
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
@@ -66,7 +64,7 @@ module gshare_predictor#(
                 endcase
 
                 // 更新 GHR（移位寄存器）
-        //       ghr <= {ghr[GHR_BITS-2:0], actual_taken};
+                // ghr <= {ghr[GHR_BITS-2:0], actual_taken};
             end
         end
     end

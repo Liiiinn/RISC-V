@@ -12,17 +12,6 @@ package common;
     localparam logic [1:0] Forward_from_ex  = 2'b10;  
     localparam logic [1:0] Forward_None     = 2'b00;
     
- 
-    
-    localparam logic [6:0] R_type    = 7'b0110011;
-    localparam logic [6:0] I_type1   = 7'b0010011;
-    localparam logic [6:0] I_type_lw = 7'b0000011;
-    localparam logic [6:0] I_type_jalr = 7'b1100111;
-    localparam logic [6:0] S_type    = 7'b0100011;
-    localparam logic [6:0] B_type    = 7'b1100011;
-    localparam logic [6:0] J_type    = 7'b1101111;
-    localparam logic [6:0] U_type_lui = 7'b0110111;
-    localparam logic [6:0] U_type_aui = 7'b0010111;
     localparam logic [9:0] BEQ_INSTRUCTION = {3'b000, 7'b1100011};
     localparam logic [9:0] BNE_INSTRUCTION = {3'b001, 7'b1100011};
     localparam logic [9:0] BLT_INSTRUCTION = {3'b100, 7'b1100011};
