@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 import common::*;
 
 module instr_decompressor(
@@ -14,7 +16,6 @@ module instr_decompressor(
 
     always_comb 
     begin
-        decompressed_instr = '0;
         funct7 = 7'b0;
         rs2 = 5'b0;
         rs1 = 5'b0;
@@ -38,9 +39,9 @@ module instr_decompressor(
 
                         // c.sw
                         3'b110: begin
-                            {funct7, rs2} = {5'b00000, c_instr[5], c_instr[12:10], c_instr[6], 2'b00};
+                            {funct7, rd} = {5'b00000, c_instr[5], c_instr[12:10], c_instr[6], 2'b00}; 
                             rs1 = {2'b01, c_instr[9:7]}; // rs1 = 8 +　rs1'
-                            rd = {2'b01, c_instr[4:2]}; // rd = 8 + rd'
+                            rs2 = {2'b01, c_instr[4:2]}; // rs2 = 8 + rs2'
                             funct3 = 3'b010; // sw
                             opcode = 7'b0100011; // S_TYPE
                         end
@@ -84,11 +85,11 @@ module instr_decompressor(
                         3'b011: begin
                             if (c_instr[11:7] != 5'd2 && c_instr[11:7] != 5'd0)
                             begin
-                                {funct7, rs2, rs1} = {{14{c_instr[12]}}, c_instr[12], c_instr[6:2]}; // sext(imm[17:12] << 12)
+                                {funct7, rs2, rs1, funct3} = {{14{c_instr[12]}}, c_instr[12], c_instr[6:2]}; // sext(imm[17:12] << 12)
                                 rd = c_instr[11:7];
-                                funct3 = 3'b000;
                                 opcode = 7'b0110111; // U_TYPE
                             end
+                            // TODO: exception for c.lui with rd = x2 or x0
                         end
 
                         // c.and, c.andi, c.or, c.srai, c.srli, c.sub, c.xor
