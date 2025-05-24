@@ -23,9 +23,9 @@ module cpu(
     logic [31:0] program_mem_address;
     logic program_mem_write_enable = 0;         
     logic [31:0] program_mem_write_data = 0; 
-    // logic [31:0] program_mem_read_data;
-    logic [31:0] program_mem_current_data;
-    logic [31:0] program_mem_next_data;
+    logic [31:0] program_mem_read_data;
+    // logic [31:0] program_mem_current_data;
+    // logic [31:0] program_mem_next_data;
     logic [31:0] program_mem_pc_input= 0;
     // logic [31:0] fetch_offset = 0;
     // logic [31:0] pc_inc; // add one
@@ -119,7 +119,7 @@ module cpu(
     always_comb begin
         if(if_id_write) begin
             if_id_reg_next.pc = program_mem_address;
-            if_id_reg_next.instruction = uncompressed_instr; //type transform
+            if_id_reg_next.instruction = uncompressed_instr;
         end
         else if(if_id_flush) begin
             if_id_reg_next = '0;
@@ -151,15 +151,15 @@ module cpu(
     fetch_stage inst_fetch_stage(
         .clk(clk), 
         .reset_n(reset_n),
-        // .data(program_mem_read_data),// input
-        .data(if_id_reg_next.instruction),
+        .data(program_mem_read_data),
+        // .data(if_id_reg_next.instruction),
         .pc_src(pc_src),
         .pc_write(pc_write),
         .prediction(fetch_prediction),
         .jalr_target_offset(execute_jalr_target_offset),
         .jalr_flag(execute_jalr_flag),
-        .current_word(program_mem_current_data),
-        .next_word(program_mem_next_data),
+        // .current_word(program_mem_current_data),
+        // .next_word(program_mem_next_data),
         .address(program_mem_address),
         // .pc_gshare(fetch_pc_gshare),
         // .branch_offset(fetch_offset),
@@ -174,10 +174,10 @@ module cpu(
         .byte_address(program_mem_address), //from pc or from uart
         .write_enable(program_mem_write_enable),
         .write_data(program_mem_write_data),
-        // .read_data(program_mem_read_data) // output
+        .read_data(program_mem_read_data)
         // .pc_inc(pc_inc)
-        .curr_read_data(program_mem_current_data),
-        .next_read_data(program_mem_next_data)
+        // .curr_read_data(program_mem_current_data),
+        // .next_read_data(program_mem_next_data)
     );
     
     
