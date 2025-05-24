@@ -107,7 +107,7 @@ module control(
             end
 
             //B type, BEQ, BNE, BLT, BGE, BLTU, BGEU
-            B_type: begin
+            7'b1100011: begin
                 control.encoding = B_TYPE;
                 control.is_branch = 1'b1;  
                 control.reg_write = 1'b0;
