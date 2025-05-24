@@ -11,10 +11,8 @@ module fetch_stage(
     input prediction,
     input [31:0] jalr_target_offset,
     input jalr_flag,
-    input [31:0] current_word,
-    input [31:0] next_word,
     output logic [31:0] address,
-    output instruction_type [31:0] instruction_out, 
+    output instruction_type instruction_out, 
     // output logic [31:0] branch_offset,
     // output logic [31:0] pc_gshare,
     output logic if_id_flush,
@@ -28,67 +26,99 @@ module fetch_stage(
     encoding_type inst_encode;
 
     // RV32C extended signals
-    logic [15:0] instr_buffer;
-    logic is_compressed;
-    instruction_type current_instr;
+    logic [15:0] instr_buffer, instr_buffer_next;
+    logic buffer_valid, buffer_valid_next;
+    logic is_compressed, is_compressed_next;
+    logic [31:0] current_instr, current_instr_next; 
     instruction_type decompressed_instr;
-    logic [31:0] current_instr; 
 
-    typedef enum {FETCH, USE_BUFFER} fetch_state_type;
-    fetch_state_type fetch_state, fetch_state_next;
-    
+    typedef enum {DIRECT, USE_BUFFER} state_type;
+    state_type state, state_next;
+
     always_ff @(posedge clk or negedge reset_n)
     begin
         if (!reset_n)
-            fetch_state <= FETCH;
-        else
-            fetch_state <= fetch_state_next; 
+        begin
+            state <= DIRECT;
+            instr_buffer <= '0;
+            buffer_valid <= 1'b0;
+            is_compressed <= 1'b0;
+            current_instr <= '0;
+        end
+        else begin
+            state <= state_next;
+            instr_buffer <= instr_buffer_next;
+            buffer_valid <= buffer_valid_next;
+            is_compressed <= is_compressed_next;
+            current_instr <= current_instr_next;
+        end
     end
-
-    always_comb begin
-        current_instr = '0;
-        instr_buffer = '0;
-        is_compressed = 1'b0;
-        fetch_state_next = FETCH;
-
-        case (fetch_state)
-            FETCH: begin
+    
+    always_comb begin: FSM_logic
+        case (state)
+            DIRECT: begin
                 case (pc_reg[1])
                     1'b0: begin
-                        if (current_word[1:0] != 2'b11) // if low 16 bits is compressed
-                        begin
-                            current_instr = {16'b0, current_word[15:0]};
-                            is_compressed = 1'b1;
+                        // low 16 bits is compressed, high 16 bits is not compressed
+                        if (data[1:0] != 2'b11 && data[17:16] == 2'b11)
+                            state_next = USE_BUFFER;
+                        else
+                            state_next = DIRECT;
+                    end
 
-                            if (current_word[17:16] != 2'b11) // if high 16 bits is compressed
+                    1'b1: state_next = DIRECT; // high 16 bits is compressed
+                endcase 
+            end
+
+            USE_BUFFER: begin
+                if (data[17:16] == 2'b11) // high 16 bits is not compressed
+                    state_next = USE_BUFFER;
+                else
+                    state_next = DIRECT; // high 16 bits is compressed
+            end
+        endcase
+    end
+
+    always_comb begin: buffer_logic
+        current_instr_next = '0;
+        instr_buffer_next = '0;
+        buffer_valid_next = 1'b0;
+        is_compressed_next = 1'b0;
+
+        case (state)
+            DIRECT: begin
+                case (pc_reg[1])
+                    1'b0: begin
+                        if (data[1:0] != 2'b11) // low 16 bits is compressed
+                        begin
+                            current_instr_next = {16'b0, data[15:0]};
+                            is_compressed_next = 1'b1;
+
+                            if (data[17:16] == 2'b11) // high 16 bits is not compressed
                             begin
-                                fetch_state_next = USE_BUFFER;
-                                instr_buffer = current_word[31:16];
+                                buffer_valid_next = 1'b1;
+                                instr_buffer_next = data[31:16];
                             end
                         end
-                        else begin
-                            current_instr = current_word; // current word is standard
-                            is_compressed = 1'b0;
-                        end
+                        else
+                            current_instr_next = data; // standard instruction
                     end
-                    
-                    1'b1: begin
-                        if (current_word[17:16] != 2'b11) // if high 16 bits is compressed
-                        begin
-                            current_instr = {16'b0, current_word[31:16]};
-                            is_compressed = 1'b1;
-                        end
-                        else begin
-                            current_instr = {next_word[15:0], current_word[31:16]};
-                            is_compressed = 1'b0;
-                        end
+
+                    1'b1: begin // high 16 bits is compressed
+                        current_instr_next = {16'b0, data[31:16]};
+                        is_compressed_next = 1'b1;
                     end
                 endcase
             end
 
             USE_BUFFER: begin
-                current_instr = {16'b0, instr_buffer};
-                is_compressed = 1'b1;
+                current_instr_next = {data[15:0], instr_buffer};
+
+                if (data[17:16] == 2'b11) // high 16 bits is not compressed
+                begin
+                    buffer_valid_next = 1'b1;
+                    instr_buffer_next = data[31:16];
+                end
             end
         endcase
     end
@@ -133,7 +163,7 @@ module fetch_stage(
         end
         else begin
             if(data.opcode == B_type && prediction)
-                pc_recovery <= pc_reg +4;
+                pc_recovery <= pc_reg + (is_compressed_next ? 2 : 4);
         end
     end
 
@@ -180,7 +210,7 @@ module fetch_stage(
     always_comb begin
         if (pc_write) begin
             if (pc_src && prediction_2) begin
-                pc_next = pc_buff2 + branch_offset_2 + (is_compressed ? 4 : 8);  //From IF to EXE ,when prediction is right, need another 
+                pc_next = pc_buff2 + branch_offset_2 + (is_compressed_next ? 4 : 8);  //From IF to EXE ,when prediction is right, need another 
                 // 8 offset for consistency;
                 //branch from insturction in EX stage,create buff for pc_reg,or the branch address is not correct
             end
@@ -188,19 +218,19 @@ module fetch_stage(
                pc_next = pc_buff2 + branch_offset_2; // when not taken, just jump directly;
             end
             else if (data.opcode == B_type) begin
-                pc_next = prediction ? pc_reg + branch_offset_0 : pc_reg + (is_compressed ? 2 : 4); //branch prediction              
+                pc_next = prediction ? pc_reg + branch_offset_0 : pc_reg + (is_compressed_next ? 2 : 4); //branch prediction              
             end
             else if (data.opcode == J_type) begin
                 pc_next = pc_reg + branch_offset_0; //jal
             end
-            else if(jalr_flag) begin
+            else if (jalr_flag) begin
                 pc_next = jalr_target_offset;
             end 
             else if (if_id_flush) begin
                 pc_next = pc_recovery;
             end
             else begin
-                pc_next = pc_reg + (is_compressed ? 2 : 4); //do not consider jalr
+                pc_next = pc_reg + (is_compressed_next ? 2 : 4); //do not consider jalr
             end
         end
         else begin
@@ -219,7 +249,7 @@ module fetch_stage(
         end    
     end
 
-    assign address = pc_reg;
+    assign address = (buffer_valid) ? pc_reg + 2 : pc_reg;
     // assign branch_offset = branch_offset_2;
     // assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
     // assign pc_gshare = pc_reg - 8 // when initial value for prediction is not taken 
