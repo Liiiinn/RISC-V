@@ -32,8 +32,7 @@ module execute_stage(
     logic [31:0] data2_or_imm;
 
     
-    always_comb: operand_selector 
-    begin
+    always_comb begin: operand_selector
         if (control_in.alu_src)
             data2_or_imm = immediate_data;
         else
@@ -55,8 +54,7 @@ module execute_stage(
             right_operand = data2_or_imm;
     end
 
-    always_comb: jalr_target_address
-    begin
+    always_comb begin: jalr_target_address
         if (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)
         begin
             alu_data = pc_in + 4;
