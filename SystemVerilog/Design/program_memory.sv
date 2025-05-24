@@ -5,12 +5,12 @@ module program_memory (
     input [31:0] byte_address,
     input write_enable,         
     input [31:0] write_data, 
-    //output logic [31:0] read_data
-    output logic [31:0] curr_read_data,
-    output logic [31:0] next_read_data
+    output logic [31:0] read_data
+    // output logic [31:0] curr_read_data,
+    // output logic [31:0] next_read_data
 );
 
-    logic [31:0] ram [0:256];
+    logic [31:0] ram [0:255];
     logic [7:0] word_address;
     
     
@@ -26,7 +26,7 @@ module program_memory (
         // ram[3] = 32'b00000000001000001000000110110011; // ADD x3,x1,x2
         // ram[4] = 32'b00000000000000000000000000010011; // NOP
         // ram[5] = 32'b00000000001100000010001000100011; // SW x3,8(x0)  
-        // test for ADDI,ADD instructions 
+        // test for ADDI, ADD instructions 
         // funct 7 rs2 rs1 funct3 rd opcode , solved related bugs.
         // ram[0] = 32'b00000000_00000_00000_000_00000_0010011; //nop
         // ram[1] = 32'b00000000_00001_00000_000_00001_0010011; // (ADDI x1, x0, 1)
@@ -35,21 +35,34 @@ module program_memory (
         // ram[4] = 32'b00000000_00100_00001_000_00100_0010011; // (ADDI x4, x1, 4)
         // ram[5] = 32'b00000000_00010_00011_000_00101_0110011; //ADD X5,X1,X2)  
         // test for branch with initial taken and not taken, test flush, jal, jalr
-        ram[0] = 32'b0000000_00011_00000_000_00010_0010011; // ADDI x2, x0, 3
-        ram[1] = 32'b0000000_00101_00000_000_00001_0010011; //ADDI x1, x0, 5      
-        // imm[12] = 0; +imm[10:5] = 000000; +rs2 +rs1 +funt3 +im[4:1] = 1010 + imm[11] = 0 + opcode
-        // 20 = 0_0000_0001_0100
-        ram[2] = 32'b0000000_00001_00010_000_1010_0_1100011;// beq x2,x1 offset is 20
-        ram[3] = 32'b0000000_00001_00000_000_00100_0010011; // (addi x4,x0,1)
-        ram[4] = 32'b0000000_00001_00010_000_00010_0010011; // (addi x2, x2, 1 predition fail) 
-        ram[5] = 32'b0000000_00000_00000_000_00000_0010011; // nop     
-        ram[6] = 32'b1_1111111000_1_11111111_00000_1101111; // jal pc-16
-        // im[20]=1,im[10:1]=11111111000,im[11]=1,im[19:12]=11111111;rd=00000,opcode=1101111;
-        // -16 = 13'b111111111111111110000
-        ram[7] = 32'b0000000_01111_00000_000_00011_0010011; //label: addi x3, x0, 15)
+        // ram[0] = 32'b0000000_00011_00000_000_00010_0010011; // ADDI x2, x0, 3
+        // ram[1] = 32'b0000000_00101_00000_000_00001_0010011; //ADDI x1, x0, 5      
+        // // imm[12] = 0; +imm[10:5] = 000000; +rs2 +rs1 +funt3 +im[4:1] = 1010 + imm[11] = 0 + opcode
+        // // 20 = 0_0000_0001_0100
+        // ram[2] = 32'b0000000_00001_00010_000_1010_0_1100011;// beq x2,x1 offset is 20
+        // ram[3] = 32'b0000000_00001_00000_000_00100_0010011; // (addi x4,x0,1)
+        // ram[4] = 32'b0000000_00001_00010_000_00010_0010011; // (addi x2, x2, 1 predition fail) 
+        // ram[5] = 32'b0000000_00000_00000_000_00000_0010011; // nop     
+        // ram[6] = 32'b1_1111111000_1_11111111_00000_1101111; // jal pc-16
+        // // im[20]=1,im[10:1]=11111111000,im[11]=1,im[19:12]=11111111;rd=00000,opcode=1101111;
+        // // -16 = 13'b111111111111111110000
+        // ram[7] = 32'b0000000_01111_00000_000_00011_0010011; //label: addi x3, x0, 15)
         // ram[8] = 32'b0000000_00110_00000_000_01000_0010011; //x8 =6;
-        ram[8] = 32'b0000000_00000_00000_000_00000_0010011; // (end: nop)*/
+        // ram[8] = 32'b0000000_00000_00000_000_00000_0010011; // (end: nop)*/
 
+        ram[0] = 32'h0020_0093; // addi x1, x0, 2
+        ram[1] = 32'h0593_4529; // c.li x10, 10; then half of addi x11, x0, 5
+        ram[2] = 32'h061d_0050; // half of addi x11, x0, 5; then c.addi x12, 7
+        ram[3] = 32'h0030_0693; // addi x13, x0, 3
+        ram[4] = 32'h458d_9506; // c.add x10, x1; then c.li x11, 3
+        ram[5] = 32'h862a_8d0d; // c.sub x10, x11; then c.mv x12, x10
+        ram[6] = 32'h8909_8e69; // c.and x12, x10; then c.andi x10, 2
+        ram[7] = 32'h8d35_8e49; // c.or x12, x10; then c.xor x10, x13
+        ram[8] = 32'h0592_6595; // c.lui x11, 5; then c.slli x11, 4
+        ram[9] = 32'h0713_8591; // c.srai x11, 4; then half of addi x14, x0, -1
+        ram[10] = 32'h8311_fff0; // half of addi x14, x0, -1; then c.srli x14, 4
+        ram[11] = 32'h42d0_c2cc; // c.sw x11, 4(x13), then c.lw x12, 4(x13)
+        ram[12] = 32'h0000_0013; // (end: nop)*/
         
     end
     
@@ -60,7 +73,7 @@ module program_memory (
         end 
     end
     
-    assign curr_read_data = ram[word_address];
-    assign next_read_data = ram[word_address + 1];
-    //assign pc_inc = byte_address + 4;
+    assign read_data = ram[word_address];
+    // assign next_read_data = ram[word_address + 1];
+    // assign pc_inc = byte_address + 4;
 endmodule
