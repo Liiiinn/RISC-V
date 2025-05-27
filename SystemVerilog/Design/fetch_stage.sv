@@ -36,7 +36,7 @@ module fetch_stage(
     logic [31:0] current_instr, current_instr_next; 
     instruction_type decompressed_instr;
     instruction_type instr, instr_next;
-    encoding_type instr_type;
+    encoding_type instr_type, instr_type_next;
 
     typedef enum {DIRECT, USE_BUFFER} state_type;
     state_type state, state_next;
@@ -57,6 +57,7 @@ module fetch_stage(
             prediction1 <= '0;
             prediction2 <= '0;
             instr <= '0;
+            instr_type <= R_TYPE;
 
             // RV32C extended signals
             state <= DIRECT;
@@ -76,6 +77,7 @@ module fetch_stage(
             prediction1 <= prediction1_next;
             prediction2 <= prediction2_next;
             instr <= instr_next;
+            instr_type <= instr_type_next;
 
             state <= state_next;
             instr_buffer <= instr_buffer_next;
@@ -164,9 +166,9 @@ module fetch_stage(
         instr_next = is_compressed ? decompressed_instr : current_instr;
 
         case (instr_next.opcode)
-            7'b1100011: instr_type = B_TYPE;
-            7'b1101111: instr_type = J_TYPE;
-            default: instr_type = R_TYPE;
+            7'b1100011: instr_type_next = B_TYPE;
+            7'b1101111: instr_type_next = J_TYPE;
+            default: instr_type_next = R_TYPE;
         endcase
 
         branch_offset0 = immediate_extension(instr, instr_type);
@@ -183,7 +185,7 @@ module fetch_stage(
 
         // PC recovery
         if (instr_type == B_TYPE && prediction)
-            pc_recovery_next = pc_reg + (is_compressed_next ? 2 : 4);
+            pc_recovery_next = pc_reg + (is_compressed_next ? 32'd2 : 32'd4);
         else
             pc_recovery_next = pc_recovery;
 
@@ -202,16 +204,16 @@ module fetch_stage(
 
     always_comb begin: pc_update
         if (pc_write) begin
-            if (pc_src && prediction2) begin
-                pc_next = pc_buff2 + branch_offset2 + (is_compressed_next ? 4 : 8);  //From IF to EXE, when prediction is right, need another 
+            if (pc_src && prediction2_next) begin
+                pc_next = pc_buff2_next + branch_offset2_next + (is_compressed_next ? 32'd4 : 32'd8);  //From IF to EXE, when prediction is right, need another 
                 // 8 offset for consistency;
                 //branch from insturction in EX stage,create buff for pc_reg,or the branch address is not correct
             end
-            else if (pc_src && !prediction2) begin
-               pc_next = pc_buff2 + branch_offset2; // when not taken, just jump directly;
+            else if (pc_src && !prediction2_next) begin
+               pc_next = pc_buff2_next + branch_offset2_next; // when not taken, just jump directly;
             end
             else if (instr_type == B_TYPE) begin
-                pc_next = prediction ? pc_reg + branch_offset0 : pc_reg + (is_compressed_next ? 2 : 4); //branch prediction              
+                pc_next = prediction ? pc_reg + branch_offset0 : pc_reg + (is_compressed_next ? 32'd2 : 32'd4); //branch prediction              
             end
             else if (instr_type == J_TYPE) begin
                 pc_next = pc_reg + branch_offset0; //jal
@@ -220,10 +222,10 @@ module fetch_stage(
                 pc_next = jalr_target_offset;
             end 
             else if (if_id_flush) begin
-                pc_next = pc_recovery;
+                pc_next = pc_recovery_next;
             end
             else begin
-                pc_next = pc_reg + (is_compressed_next ? 2 : 4); //do not consider jalr
+                pc_next = pc_reg + (is_compressed_next ? 32'd2 : 32'd4); //do not consider jalr
             end
         end
         else begin
@@ -232,7 +234,7 @@ module fetch_stage(
     end
 
     always_comb begin    
-        if (pc_src == prediction2 && (jalr_flag != 1) ) begin  //prediction is correct and no jalr
+        if (pc_src == prediction2_next && (jalr_flag != 1) ) begin  //prediction is correct and no jalr
             if_id_flush = 1'b0;
             id_ex_flush = 1'b0;
         end
