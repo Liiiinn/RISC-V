@@ -58,6 +58,10 @@ module uart_wrapper (
         if (io_data_valid && byte_counter == 3) begin
             data_valid_next = 1;
         end
+        
+        if (data_out[15:0] == 16'h1111 || data_out[31:16] == 16'h1111) begin
+            en_address_increment_next = 0;
+        end
     end
 
     always_ff @(posedge clk or negedge reset_n) begin
