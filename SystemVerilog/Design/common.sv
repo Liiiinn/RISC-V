@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 package common;
 
     // typedef enum logic [2:0] 
