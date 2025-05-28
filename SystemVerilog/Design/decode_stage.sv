@@ -11,7 +11,7 @@ module decode_stage(
     input logic write_en,
     input logic [4:0] write_id,
     input logic [31:0] write_data,
-    output logic [5:0] reg_rd_id,
+    output logic [4:0] reg_rd_id,
     output logic [31:0] read_data1,
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
