@@ -10,7 +10,7 @@ module data_memory (
     output logic [31:0] read_data
 );
 
-    logic [31:0] ram [256];
+    logic [31:0] ram [0:255];
     logic [7:0] word_address;
     logic [1:0] byte_offset;
 
