@@ -88,8 +88,8 @@ module control(
                 control.encoding = J_TYPE;
                 control.is_branch = 1'b0;
                 control.reg_write = 1'b0;
-        //        instruction_out.rd = 0;
-//                control.alu_op = ALU_ADD;
+                // instruction_out.rd = 0;
+                // control.alu_op = ALU_ADD;
             end
 
             //S type, SB, SH, SW
