@@ -62,7 +62,32 @@ module program_memory (
         ram[9] = 32'h0713_8591; // c.srai x11, 4; then half of addi x14, x0, -1
         ram[10] = 32'h8311_fff0; // half of addi x14, x0, -1; then c.srli x14, 4
         ram[11] = 32'h42d0_c2cc; // c.sw x11, 4(x13), then c.lw x12, 4(x13)
-        ram[12] = 32'h0000_0013; // (end: nop)*/
+
+        ram[12] = 32'h0000_0613;  // addi x12, x0, 0
+        ram[13] = 32'h0030_0693;  // addi x13, x0, 3
+        ram[14] = 32'h0000_0713;  // addi x14, x0, 0
+        ram[15] = 32'h0813_4785;  // c.li x15, 1; then half of addi x16, x0, 1
+        ram[16] = 32'h0613_0010;  // half of addi x16, x0, 1; then half of addi x12, x12, 1
+
+        // store_loop
+        ram[17] = 32'h2023_0016;  // high 16 bits of addi x12, x12, 1; then low 16 bits of sw x15, 0(x14)
+        ram[18] = 32'h97b3_00f7;  // high 16 bits of sw x15, 0(x14); then low 16 bits of sll x15, x15, x16  
+        ram[19] = 32'h0713_0107;  // high 16 bits of sll x15, x15, x16; then low 16 bits of addi x14, x14, 4
+        ram[20] = 32'h48e3_0047;  // high 16 bits of addi x14, x14, 4; then low 16 bits of blt x12, x13, store_loop
+        ram[21] = 32'h0613_fed6;  // high 16 bits of blt x12, x13, store_loop; then low 16 bits of addi x12, x0, 0
+        
+        ram[22] = 32'h0713_0000;  // high 16 bits of addi x12, x0, 0; then low 16 bits of addi x14, x0, 0
+        ram[23] = 32'h0413_0000;  // high 16 bits of addi x14, x0, 0; then low 16 bits of addi x8, x0, 0
+        ram[24] = 32'h8693_0000;  // high 16 bits of addi x8, x0, 0; then low 16 bits of addi x13, x13, -1
+        ram[25] = 32'h0605_fff6;  // high 16 bits of addi x13, x13, -1; load loop: then c.addi x12, 1
+
+        ram[26] = 32'h0007_2783;  // lw x15, 0(x14)
+        ram[27] = 32'h0047_0713;  // addi x14, x14, 4
+        ram[28] = 32'hd8e3_8c3d;  // c.xor x8, x15; low 16 bits of bge x13, x12, load_loop
+        ram[29] = 32'h0013_fec6;  // high 16 bits of bge x13, x12, load_loop; then low 16 bits of nop
+
+        ram[30] = 32'h0013_0000;  // high 16 bits of nop; then low 16 bits of nop  
+        ram[31] = 32'h0000_0000;  // high 16 bits of nop
         
     end
     
