@@ -9,30 +9,32 @@ module alu(
     output logic zero_flag,
     output logic [31:0] result 
 );
+    logic [31:0] temp_result;
 
     always_comb begin
         case (control)
-            ALU_AND:  result = left_operand & right_operand;
-            ALU_OR:   result = left_operand | right_operand;
-            ALU_XOR:  result = left_operand ^ right_operand;
-            ALU_ADD:  result = left_operand + right_operand;
-            ALU_SUB:  result = left_operand - right_operand;
-            ALU_SLT:  result = ($signed(left_operand) < $signed(right_operand)) ? 32'b1 : 32'b0;
-            ALU_SLTU: result = (left_operand < right_operand) ? 32'b1 : 32'b0;
-            ALU_SLL:  result = left_operand << right_operand[4:0];
-            ALU_SRL:  result = left_operand >> right_operand[4:0];
-            ALU_SRA:  result = $signed(left_operand) >>> right_operand[4:0];
-            ALU_LUI:  result = right_operand; 
- //           B_BEQ :  result = (left_operand == right_operand);
-            B_BNE :   result = !(left_operand != right_operand);
-            B_BLT :   result = !($signed (left_operand) < $signed (right_operand));
-            B_BGE :   result = !($signed (left_operand) >= $signed (right_operand));
-            B_LTU :   result = !(left_operand < right_operand);
-            B_GEU :   result = !(left_operand >= right_operand);
-            default:  result = 32'b0;
+            ALU_AND:  temp_result = left_operand & right_operand;
+            ALU_OR:   temp_result = left_operand | right_operand;
+            ALU_XOR:  temp_result = left_operand ^ right_operand;
+            ALU_ADD:  temp_result = left_operand + right_operand;
+            ALU_SUB:  temp_result = left_operand - right_operand;
+            ALU_SLT:  temp_result = ($signed(left_operand) < $signed(right_operand)) ? 32'b1 : 32'b0;
+            ALU_SLTU: temp_result = (left_operand < right_operand) ? 32'b1 : 32'b0;
+            ALU_SLL:  temp_result = left_operand << right_operand[4:0];
+            ALU_SRL:  temp_result = left_operand >> right_operand[4:0];
+            ALU_SRA:  temp_result = $signed(left_operand) >>> right_operand[4:0];
+            ALU_LUI:  temp_result = right_operand; 
+ //           B_BEQ :  temp_result = (left_operand == right_operand);
+            B_BNE :   temp_result = !(left_operand != right_operand);
+            B_BLT :   temp_result = !($signed (left_operand) < $signed (right_operand));
+            B_BGE :   temp_result = !($signed (left_operand) >= $signed (right_operand));
+            B_LTU :   temp_result = !(left_operand < right_operand);
+            B_GEU :   temp_result = !(left_operand >= right_operand);
+            default:  temp_result = 32'b0;
         endcase
     end
 
-    assign zero_flag = result == 0 ? 1'b1 : 1'b0;
+    assign zero_flag = temp_result == 0 ? 1'b1 : 1'b0;
+    assign result = temp_result;
 
 endmodule
