@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+import common::*;
 
 module register_file(
     input clk,
@@ -13,7 +14,7 @@ module register_file(
     output logic [31:0] read2_data
 );
 
-    parameter REGISTER_FILE_SIZE = 32;
+    //parameter REGISTER_FILE_SIZE = 32;
     
     logic [31:0] registers [0:REGISTER_FILE_SIZE-1] = '{default:0};
     

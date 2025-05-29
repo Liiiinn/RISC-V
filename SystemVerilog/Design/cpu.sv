@@ -7,7 +7,8 @@ module cpu(
     input clk,
     input reset_n,
     input io_rx,
-    output [31:0] alu_out
+    //output [31:0] alu_out,
+    output indication
 );
 
     logic pc_src;
@@ -18,6 +19,7 @@ module cpu(
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
     logic fetch_prediction;
+    logic fetch_decpompress_failed;
     // logic [31:0]fetch_pc_gshare;
 
     logic [31:0] program_mem_address;
@@ -38,6 +40,7 @@ module cpu(
     logic [31:0] decode_pc_out;
     logic [31:0] decode_immediate_data;
     control_type decode_control;
+    logic decode_instruction_illegal;
     
     logic [31:0] execute_alu_data;
     control_type execute_control;
@@ -47,6 +50,7 @@ module cpu(
     logic [31:0] execute_pc_out;
     logic [31:0] execute_jalr_target_offset;
     logic execute_jalr_flag;
+    logic execute_overflow;
     
     logic [31:0] memory_memory_data;
     logic [31:0] memory_alu_data;
@@ -77,8 +81,7 @@ module cpu(
             //if_id_reg.pc <= if_id_reg_next.pc ;
             //if_id_reg.instruction <= if_id_reg_next.instruction;
             
-            if(id_ex_flush) 
-            begin
+            if(id_ex_flush) begin
                 id_ex_reg.reg_rs1_id <= '0;
                 id_ex_reg.reg_rs2_id <= '0;
                 id_ex_reg.reg_rd_id <= '0;
@@ -99,7 +102,10 @@ module cpu(
                 id_ex_reg.immediate_data <= decode_immediate_data;
                 // id_ex_reg.control <= id_ex_reg_control_next;
                 id_ex_reg.control <= decode_control;
-            end             
+                id_ex_reg.decpompress_failed <= if_id_reg.decpompress_failed;
+                id_ex_reg.instruction_illegal <= decode_instruction_illegal;
+            end
+
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
             ex_mem_reg.alu_data <= execute_alu_data;
@@ -120,6 +126,7 @@ module cpu(
         if(if_id_write) begin
             if_id_reg_next.pc = program_mem_address;
             if_id_reg_next.instruction = uncompressed_instr;
+            if_id_reg_next.decpompress_failed = fetch_decpompress_failed;
         end
         else if(if_id_flush) begin
             if_id_reg_next = '0;
@@ -165,7 +172,8 @@ module cpu(
         // .branch_offset(fetch_offset),
         .instruction_out(uncompressed_instr),
         .if_id_flush(if_id_flush),
-        .id_ex_flush(branch_id_ex_flush)
+        .id_ex_flush(branch_id_ex_flush),
+        .decompress_failed(fetch_decpompress_failed)
     );
 
 
@@ -194,6 +202,7 @@ module cpu(
         .read_data2(decode_data2),
         .immediate_data(decode_immediate_data),
         .pc_out(decode_pc_out),
+        .instruction_illegal(decode_instruction_illegal),
         .control_signals(decode_control)
     );
     
@@ -216,7 +225,8 @@ module cpu(
         .jalr_target_offset(execute_jalr_target_offset),
         .jalr_flag(execute_jalr_flag),
         .pc_src(pc_src),
-        .pc_out(execute_pc_out)
+        .pc_out(execute_pc_out),
+        .overflow(execute_overflow)
     );
     
     
@@ -277,5 +287,6 @@ module cpu(
     assign wb_write_back_en = mem_wb_reg.control.reg_write;
     assign wb_result = mem_wb_reg.control.mem_read ? mem_wb_reg.memory_data : mem_wb_reg.alu_data;
     assign id_ex_flush = branch_id_ex_flush | stall_id_ex_flush;
-    assign alu_out = execute_alu_data;
+    assign indication = fetch_decpompress_failed | decode_instruction_illegal | execute_overflow;
+    //assign alu_out = execute_alu_data;
 endmodule

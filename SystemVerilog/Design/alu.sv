@@ -7,7 +7,8 @@ module alu(
     input wire [31:0] left_operand, 
     input wire [31:0] right_operand,
     output logic zero_flag,
-    output logic [31:0] result 
+    output logic [31:0] result,
+    output logic overflow
 );
     logic [31:0] temp_result;
 
@@ -24,7 +25,7 @@ module alu(
             ALU_SRL:  temp_result = left_operand >> right_operand[4:0];
             ALU_SRA:  temp_result = $signed(left_operand) >>> right_operand[4:0];
             ALU_LUI:  temp_result = right_operand; 
- //           B_BEQ :  temp_result = (left_operand == right_operand);
+            //B_BEQ :  temp_result = (left_operand == right_operand);
             B_BNE :   temp_result = !(left_operand != right_operand);
             B_BLT :   temp_result = !($signed (left_operand) < $signed (right_operand));
             B_BGE :   temp_result = !($signed (left_operand) >= $signed (right_operand));
@@ -34,7 +35,19 @@ module alu(
         endcase
     end
 
+    always_comb begin
+        if (control == ALU_ADD) begin
+            overflow = (left_operand[31] & right_operand[31]) ^ (temp_result[30] & left_operand[30]);
+        end
+        else if (control == ALU_SUB) begin
+            overflow = ((left_operand[31] & ~right_operand[31]) ^ (temp_result[30] & left_operand[30])) 
+            || left_operand == 32'h8000_0000 || right_operand == 32'h8000_0000;
+        end
+        else begin
+            overflow = 1'b0;
+        end
+    end
+
     assign zero_flag = temp_result == 0 ? 1'b1 : 1'b0;
     assign result = temp_result;
-
 endmodule

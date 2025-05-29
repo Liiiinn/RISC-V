@@ -6,6 +6,7 @@ module stall_unit(
     input logic [4:0] rs2_id,
     input logic [4:0] rd_id,
     input logic mem_read,
+    input logic indication,
 
     output logic pc_write,
     output logic if_id_write,
@@ -14,6 +15,11 @@ module stall_unit(
 
     always_comb begin
         if(mem_read && (rd_id != 0) && ((rd_id == rs1_id) || (rd_id == rs2_id))) begin
+            pc_write = 0;
+            if_id_write = 0;
+            id_ex_flush = 1;
+        end
+        else if (indication) begin
             pc_write = 0;
             if_id_write = 0;
             id_ex_flush = 1;

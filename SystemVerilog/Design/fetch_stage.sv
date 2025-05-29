@@ -16,7 +16,8 @@ module fetch_stage(
     // output logic [31:0] branch_offset,
     // output logic [31:0] pc_gshare,
     output logic if_id_flush,
-    output logic id_ex_flush
+    output logic id_ex_flush,
+    output logic decompress_failed
 );
 
     logic [31:0] pc_next, pc_reg;
@@ -161,7 +162,8 @@ module fetch_stage(
     instr_decompressor decompressor(
         .c_instr(current_instr[15:0]),
         .is_compressed(is_compressed),
-        .decompressed_instr(decompressed_instr)
+        .decompressed_instr(decompressed_instr),
+        .decompress_failed(decompress_failed)
     );
 
     always_comb begin: branch_offset_calc

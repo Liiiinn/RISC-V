@@ -5,7 +5,8 @@ import common::*;
 module instr_decompressor(
     input logic [15:0] c_instr,
     input is_compressed,
-    output instruction_type decompressed_instr
+    output instruction_type decompressed_instr,
+    output logic decompress_failed
 );
     logic [6:0] funct7;
     logic [4:0] rs2;
@@ -14,14 +15,14 @@ module instr_decompressor(
     logic [4:0] rd;
     logic [6:0] opcode;
 
-    always_comb 
-    begin
+    always_comb begin
         funct7 = 7'b0;
         rs2 = 5'b0;
         rs1 = 5'b0;
         funct3 = 3'b0;
         rd = 5'b0;
         opcode = 7'b0;
+        decompress_failed = 1'b0;
 
         if (is_compressed)
         begin
@@ -44,6 +45,11 @@ module instr_decompressor(
                             rs2 = {2'b01, c_instr[4:2]}; // rs2 = 8 + rs2'
                             funct3 = 3'b010; // sw
                             opcode = 7'b0100011; // S_TYPE
+                        end
+
+                        // Invalid instruction
+                        default: begin
+                            decompress_failed = 1'b1;
                         end
                     endcase
                 end
@@ -193,7 +199,17 @@ module instr_decompressor(
                                     funct3 = 3'b001; // bne
                                     opcode = 7'b1100011; // B_TYPE
                                 end
+
+                                // Invalid instruction
+                                default: begin
+                                    decompress_failed = 1'b1;
+                                end
                             endcase
+                        end
+
+                        // Invalid instruction
+                        default: begin
+                            decompress_failed = 1'b1;
                         end
                     endcase
                 end
@@ -265,8 +281,17 @@ module instr_decompressor(
                                         end
                                     end
                                 end
+
+                                // Invalid instruction
+                                default: begin
+                                    decompress_failed = 1'b1;
+                                end
                             endcase
-                        end       
+                        end
+
+                        default: begin
+                            decompress_failed = 1'b1;
+                        end
                     endcase
                 end
             endcase
