@@ -228,6 +228,9 @@ module fetch_stage(
             else if (if_id_flush) begin
                 pc_next = pc_recovery_next;
             end
+            else if (current_instr == 32'h00001111) begin // end instruction
+                pc_next = 0;
+            end
             else begin
                 pc_next = pc_reg + (is_compressed_next ? 32'd2 : 32'd4); //do not consider jalr
             end

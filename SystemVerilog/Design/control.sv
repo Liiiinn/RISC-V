@@ -147,7 +147,12 @@ module control(
                 control.alu_op = ALU_ADD;   //PC + imm
             end
 
-            default:  decode_failed = 1'b1;
+            default: begin
+                if (instruction == 32'h00001111)
+                    control = '0;
+                else
+                    decode_failed = 1'b1;
+            end
         endcase
     end
 endmodule
