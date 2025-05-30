@@ -83,7 +83,7 @@ module program_memory (
 
         ram[26] = 32'h0007_2783;  // lw x15, 0(x14)
         ram[27] = 32'h0047_0713;  // addi x14, x14, 4
-        ram[28] = 32'hd8e3_8c3d;  // c.xor x8, x15; low 16 bits of bge x13, x12, load_loop
+        ram[28] = 32'hdae3_8c3d;  // c.xor x8, x15; low 16 bits of bge x13, x12, load_loop
         ram[29] = 32'h0013_fec6;  // high 16 bits of bge x13, x12, load_loop; then low 16 bits of nop
 
         ram[30] = 32'h0013_0000;  // high 16 bits of nop; then low 16 bits of nop  

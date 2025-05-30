@@ -21,21 +21,23 @@ module fetch_stage(
 
     logic [31:0] pc_next, pc_reg;
     logic [31:0] branch_offset0, branch_offset0_next;
-    logic [31:0] branch_offset1, branch_offset2;
+    logic [31:0] branch_offset1;
     logic [31:0] pc_buff0, pc_buff0_next;
     logic [31:0] pc_buff1, pc_buff2;
     logic [31:0] pc_recovery, pc_recovery_next;
     logic prediction_buff0, prediction_buff0_next;
-    logic prediction_buff1;
 
     // RV32C extended signals
     logic [15:0] instr_buffer, instr_buffer_next;
+    logic [15:0] instr_recovery, instr_recovery_next;
     logic buffer_valid, buffer_valid_next;
     logic is_compressed, is_compressed_next;
     logic [31:0] current_instr, current_instr_next; 
     instruction_type decompressed_instr;
     instruction_type instr, instr_next;
     encoding_type instr_type, instr_type_next;
+
+    logic if_id_flush_reg, id_ex_flush_reg;
 
     typedef enum {DIRECT, USE_BUFFER} state_type;
     state_type state, state_next;
@@ -53,15 +55,14 @@ module fetch_stage(
             // Branch signals
             branch_offset0 <= '0;
             branch_offset1 <= '0;
-            branch_offset2 <= '0;
             prediction_buff0 <= '0;
-            prediction_buff1 <= '0;
             instr <= '0;
             instr_type <= R_TYPE;
 
             // RV32C extended signals
             state <= DIRECT;
             instr_buffer <= '0;
+            instr_recovery <= '0;
             buffer_valid <= 1'b0;
             is_compressed <= 1'b0;
             current_instr <= '0;
@@ -75,18 +76,30 @@ module fetch_stage(
 
             branch_offset0 <= branch_offset0_next;
             branch_offset1 <= branch_offset0;
-            branch_offset2 <= branch_offset1;
             prediction_buff0 <= prediction_buff0_next;
-            prediction_buff1 <= prediction_buff0;
             instr <= instr_next;
             instr_type <= instr_type_next;
 
             state <= state_next;
             instr_buffer <= instr_buffer_next;
+            instr_recovery <= instr_recovery_next;
             buffer_valid <= buffer_valid_next;
             is_compressed <= is_compressed_next;
             current_instr <= current_instr_next;
         end
+    end
+
+    always_comb begin: flush_logic
+        // if (pc_src == prediction_buff1 && jalr_flag != 1) begin  //prediction is correct and no jalr
+        //     if_id_flush = 1'b0;
+        //     id_ex_flush = 1'b0;
+        // end
+        // else begin
+        //     if_id_flush = 1'b1; //flush when predition is not correct
+        //     id_ex_flush = 1'b1; //flush when predition is not correct
+        // end
+        if_id_flush_reg = !(pc_src == prediction_buff0 && jalr_flag != 1);
+        id_ex_flush_reg = if_id_flush_reg;
     end
     
     always_comb begin: FSM_logic
@@ -146,7 +159,7 @@ module fetch_stage(
                 endcase
             end
 
-            USE_BUFFER: begin
+            USE_BUFFER: begin // TODO: branch taken, standard -> compress
                 current_instr_next = {data[15:0], instr_buffer};
 
                 if (data[17:16] == 2'b11) // high 16 bits is not compressed
@@ -156,16 +169,25 @@ module fetch_stage(
                 end
             end
         endcase
+
+        // instr_recovery_next = (instr_type == B_TYPE || instr_type == J_TYPE) ? instr_buffer : instr_recovery;
+        if (if_id_flush_reg)
+        begin
+            current_instr_next = '0;
+            instr_buffer_next = instr_recovery_next;
+            // buffer_valid_next = 1'b0;
+            // is_compressed_next = 1'b0;
+        end
     end
 
     instr_decompressor decompressor(
-        .c_instr(current_instr[15:0]),
-        .is_compressed(is_compressed),
+        .c_instr(current_instr_next[15:0]),
+        .is_compressed(is_compressed_next),
         .decompressed_instr(decompressed_instr)
     );
 
     always_comb begin: branch_offset_calc
-        instr_next = is_compressed ? decompressed_instr : current_instr_next;
+        instr_next = is_compressed_next ? decompressed_instr : current_instr_next;
 
         case (instr_next.opcode)
             7'b1100011: instr_type_next = B_TYPE;
@@ -203,13 +225,13 @@ module fetch_stage(
         // address = (buffer_valid) ? pc_reg + 2 : pc_reg;
 
         if (pc_write) begin
-            if (pc_src && prediction_buff1) begin
-                pc_next = pc_buff2 + branch_offset2 + (is_compressed_next ? 32'd8 : 32'd12);  //From IF to EXE, when prediction is right, need another 
+            if (pc_src && prediction_buff0) begin
+                pc_next = pc_buff1 + branch_offset1 + (is_compressed_next ? 32'd4 : 32'd8);  //From IF to EXE, when prediction is right, need another 
                 // 8 offset for consistency;
                 //branch from insturction in EX stage,create buff for pc_reg,or the branch address is not correct
             end
-            else if (pc_src && !prediction_buff1) begin
-               pc_next = pc_buff2 + branch_offset2; // when not taken, just jump directly;
+            else if (pc_src && !prediction_buff0) begin
+               pc_next = pc_buff1 + branch_offset1; // when not taken, just jump directly;
             end
             else if (instr_type_next == B_TYPE) begin
                 pc_next = prediction ? pc_reg + branch_offset0_next : pc_reg + (is_compressed_next ? 32'd2 : 32'd4); //branch prediction              
@@ -223,7 +245,7 @@ module fetch_stage(
             else if (jalr_flag) begin
                 pc_next = jalr_target_offset;
             end 
-            else if (if_id_flush) begin
+            else if (if_id_flush_reg) begin
                 pc_next = pc_recovery_next;
             end
             else begin
@@ -235,16 +257,8 @@ module fetch_stage(
         end
     end
 
-    always_comb begin    
-        if (pc_src == prediction_buff1 && (jalr_flag != 1) ) begin  //prediction is correct and no jalr
-            if_id_flush = 1'b0;
-            id_ex_flush = 1'b0;
-        end
-        else begin
-            if_id_flush = 1'b1; //flush when predition is not correct
-            id_ex_flush = 1'b1; //flush when predition is not correct
-        end    
-    end
+    assign if_id_flush = if_id_flush_reg;
+    assign id_ex_flush = id_ex_flush_reg;
 
     assign address = (buffer_valid) ? pc_reg + 2 : pc_reg;
 
@@ -259,6 +273,8 @@ module fetch_stage(
     // assign pc_gshare = pc_reg - branch_offset_2 - 4;// when initial value for predition is taken
     // assign pc_gshare = pc_reg - 8 // when initial value for prediction is not taken 
     // add a pc calculation  output  for real gshare pc ;
-    assign instruction_out = is_compressed ? decompressed_instr : current_instr;
-    
+    // assign instruction_out = if_id_flush_reg ?
+    //     '0 : (is_compressed ? decompressed_instr : current_instr);
+    assign instruction_out = is_compressed_next ? decompressed_instr : current_instr_next;
+
 endmodule
