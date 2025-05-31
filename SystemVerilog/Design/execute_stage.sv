@@ -21,7 +21,8 @@ module execute_stage(
     output logic pc_src,
     output logic [31:0] jalr_target_offset,
     output logic jalr_flag,
-    output logic [31:0] pc_out
+    output logic [31:0] pc_out,
+    output logic overflow
 );
 
     logic zero_flag;
@@ -67,14 +68,21 @@ module execute_stage(
             jalr_target_offset = '0 ;
         end
     end
-    
+
+    //always_comb begin: memory_address_check
+    //    mem_address_illegal = 1'b0;
+    //    if ((control_in.mem_read || control_in.mem_write) && alu_data >= 256) begin
+    //        mem_address_illegal = 1'b1;
+    //    end
+    //end
     
     alu inst_alu(
         .control(control_in.alu_op),
-        .left_operand(left_operand), 
+        .left_operand(left_operand),
         .right_operand(right_operand),
         .zero_flag(zero_flag),
-        .result(alu_result)
+        .result(alu_result),
+        .overflow(overflow)
     );
     
     assign control_out = control_in;

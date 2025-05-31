@@ -13,6 +13,8 @@ package common;
     localparam logic [1:0] Forward_from_mem = 2'b01;
     localparam logic [1:0] Forward_from_ex  = 2'b10;  
     localparam logic [1:0] Forward_None     = 2'b00;
+
+    localparam REGISTER_FILE_SIZE = 32; // Number of registers in the register file
     
     localparam logic [9:0] BEQ_INSTRUCTION = {3'b000, 7'b1100011};
     localparam logic [9:0] BNE_INSTRUCTION = {3'b001, 7'b1100011};
@@ -85,6 +87,7 @@ package common;
     {
         logic [31:0] pc;
         instruction_type instruction;
+        logic decpompress_failed;
     } if_id_type;
     
     
@@ -99,6 +102,8 @@ package common;
         logic [31:0] pc; //add new element
         instruction_type instruction;
         control_type control;
+        logic decpompress_failed;
+        logic instruction_illegal;
     } id_ex_type;
     
 

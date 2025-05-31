@@ -16,7 +16,8 @@ module fetch_stage(
     // output logic [31:0] branch_offset,
     // output logic [31:0] pc_gshare,
     output logic if_id_flush,
-    output logic id_ex_flush
+    output logic id_ex_flush,
+    output logic decompress_failed
 );
 
     logic [31:0] pc_next, pc_reg;
@@ -181,9 +182,10 @@ module fetch_stage(
     end
 
     instr_decompressor decompressor(
-        .c_instr(current_instr_next[15:0]),
-        .is_compressed(is_compressed_next),
-        .decompressed_instr(decompressed_instr)
+        .c_instr(current_instr[15:0]),
+        .is_compressed(is_compressed),
+        .decompressed_instr(decompressed_instr),
+        .decompress_failed(decompress_failed)
     );
 
     always_comb begin: branch_offset_calc
@@ -247,6 +249,9 @@ module fetch_stage(
             end 
             else if (if_id_flush_reg) begin
                 pc_next = pc_recovery_next;
+            end
+            else if (current_instr == 32'h00001111) begin // end instruction
+                pc_next = 0;
             end
             else begin
                 pc_next = pc_reg + (is_compressed_next ? 32'd2 : 32'd4); //do not consider jalr

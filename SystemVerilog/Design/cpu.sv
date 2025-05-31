@@ -7,8 +7,15 @@ module cpu(
     input clk,
     input reset_n,
     input io_rx,
-    output [31:0] alu_out
+    //output [31:0] alu_out,
+    output indication
 );
+
+    logic [31:0] uart_write_address;
+    logic run_flag;
+    logic run_flag_next;
+    logic run_finished;
+    logic stall_pc_write;
 
     logic pc_src;
     logic pc_write; // Default 1: allow PC write
@@ -18,15 +25,17 @@ module cpu(
     logic branch_id_ex_flush; // Default 0
     logic stall_id_ex_flush; // Default 0
     logic fetch_prediction;
+    logic fetch_decpompress_failed;
+    logic [31:0] fetch_read_address;
     // logic [31:0]fetch_pc_gshare;
 
     logic [31:0] program_mem_address;
-    logic program_mem_write_enable = 0;         
-    logic [31:0] program_mem_write_data = 0; 
+    logic program_mem_write_enable;         
+    logic [31:0] program_mem_write_data; 
     logic [31:0] program_mem_read_data;
     // logic [31:0] program_mem_current_data;
     // logic [31:0] program_mem_next_data;
-    logic [31:0] program_mem_pc_input= 0;
+    //logic [31:0] program_mem_pc_input= 0;
     // logic [31:0] fetch_offset = 0;
     // logic [31:0] pc_inc; // add one
     
@@ -38,6 +47,7 @@ module cpu(
     logic [31:0] decode_pc_out;
     logic [31:0] decode_immediate_data;
     control_type decode_control;
+    logic decode_instruction_illegal;
     
     logic [31:0] execute_alu_data;
     control_type execute_control;
@@ -47,6 +57,7 @@ module cpu(
     logic [31:0] execute_pc_out;
     logic [31:0] execute_jalr_target_offset;
     logic execute_jalr_flag;
+    logic execute_overflow;
     
     logic [31:0] memory_memory_data;
     logic [31:0] memory_alu_data;
@@ -65,7 +76,7 @@ module cpu(
     mem_wb_type mem_wb_reg;
     
    
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             if_id_reg <= '0;
             id_ex_reg <= '0;
@@ -77,8 +88,7 @@ module cpu(
             //if_id_reg.pc <= if_id_reg_next.pc ;
             //if_id_reg.instruction <= if_id_reg_next.instruction;
             
-            if(id_ex_flush) 
-            begin
+            if(id_ex_flush) begin
                 id_ex_reg.reg_rs1_id <= '0;
                 id_ex_reg.reg_rs2_id <= '0;
                 id_ex_reg.reg_rd_id <= '0;
@@ -99,7 +109,10 @@ module cpu(
                 id_ex_reg.immediate_data <= decode_immediate_data;
                 // id_ex_reg.control <= id_ex_reg_control_next;
                 id_ex_reg.control <= decode_control;
-            end             
+                id_ex_reg.decpompress_failed <= if_id_reg.decpompress_failed;
+                id_ex_reg.instruction_illegal <= decode_instruction_illegal;
+            end
+
             ex_mem_reg.reg_rd_id <= id_ex_reg.reg_rd_id;
             ex_mem_reg.control <= execute_control;
             ex_mem_reg.alu_data <= execute_alu_data;
@@ -120,6 +133,7 @@ module cpu(
         if(if_id_write) begin
             if_id_reg_next.pc = program_mem_address;
             if_id_reg_next.instruction = uncompressed_instr;
+            if_id_reg_next.decpompress_failed = fetch_decpompress_failed;
         end
         else if(if_id_flush) begin
             if_id_reg_next = '0;
@@ -147,6 +161,39 @@ module cpu(
 //        end
 //    end
 
+
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            run_flag <= 0;
+        end
+        else begin
+            run_flag <= run_flag_next;
+        end
+    end
+
+
+    always_comb begin
+        if(program_mem_write_data[15:0] == 16'h1111) begin
+            run_flag_next = 1;
+        end
+        else if(uncompressed_instr == 32'h00001111) begin
+            run_flag_next = 0;
+        end
+        else begin
+            run_flag_next = run_flag;
+        end
+    end
+
+
+    uart_wrapper inst_uart_wrapper(
+        .clk(clk),
+        .reset_n(reset_n),
+        .io_rx(io_rx),
+        .data_valid(program_mem_write_enable),
+        .data_out(program_mem_write_data),
+        .byte_address(uart_write_address)
+    );
+
     
     fetch_stage inst_fetch_stage(
         .clk(clk), 
@@ -160,12 +207,13 @@ module cpu(
         .jalr_flag(execute_jalr_flag),
         // .current_word(program_mem_current_data),
         // .next_word(program_mem_next_data),
-        .address(program_mem_address),
+        .address(fetch_read_address),
         // .pc_gshare(fetch_pc_gshare),
         // .branch_offset(fetch_offset),
         .instruction_out(uncompressed_instr),
         .if_id_flush(if_id_flush),
-        .id_ex_flush(branch_id_ex_flush)
+        .id_ex_flush(branch_id_ex_flush),
+        .decompress_failed(fetch_decpompress_failed)
     );
 
 
@@ -194,6 +242,7 @@ module cpu(
         .read_data2(decode_data2),
         .immediate_data(decode_immediate_data),
         .pc_out(decode_pc_out),
+        .instruction_illegal(decode_instruction_illegal),
         .control_signals(decode_control)
     );
     
@@ -216,7 +265,8 @@ module cpu(
         .jalr_target_offset(execute_jalr_target_offset),
         .jalr_flag(execute_jalr_flag),
         .pc_src(pc_src),
-        .pc_out(execute_pc_out)
+        .pc_out(execute_pc_out),
+        .overflow(execute_overflow)
     );
     
     
@@ -253,7 +303,7 @@ module cpu(
         .rs2_id(if_id_reg.instruction.rs2),
         .rd_id(id_ex_reg.reg_rd_id),
         .mem_read(id_ex_reg.control.mem_read),
-        .pc_write(pc_write),
+        .pc_write(stall_pc_write),
         .if_id_write(if_id_write),
         .id_ex_flush(stall_id_ex_flush)
     );
@@ -273,9 +323,12 @@ module cpu(
     );
 
 
+    assign program_mem_address = program_mem_write_enable ? uart_write_address : fetch_read_address;
     assign wb_reg_rd_id = mem_wb_reg.reg_rd_id;
     assign wb_write_back_en = mem_wb_reg.control.reg_write;
     assign wb_result = mem_wb_reg.control.mem_read ? mem_wb_reg.memory_data : mem_wb_reg.alu_data;
     assign id_ex_flush = branch_id_ex_flush | stall_id_ex_flush;
-    assign alu_out = execute_alu_data;
+    assign indication = fetch_decpompress_failed | decode_instruction_illegal | execute_overflow;
+    assign pc_write = stall_pc_write & run_flag;
+    //assign alu_out = execute_alu_data;
 endmodule

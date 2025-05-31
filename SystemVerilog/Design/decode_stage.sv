@@ -16,16 +16,20 @@ module decode_stage(
     output logic [31:0] read_data2,
     output logic [31:0] immediate_data,
     output logic [31:0] pc_out,
+    output logic instruction_illegal,
     //output logic [31:0] jalr_target_offset,
     //output logic jalr_flag,
     output control_type control_signals
 );
 
+    logic decode_failed;
+    logic reg_illegal;
+    
     logic [31:0] rf_read_data1;
     logic [31:0] rf_read_data2;
     
     control_type controls;
- //   instruction_type instruction_out ;
+//   instruction_type instruction_out ;
 //remove jalr here cause we have to use forward and operation like alu_add
 //    always_comb begin
 //        if (controls.encoding == I_TYPE && controls.is_branch == 1'b1) begin  //jalr
@@ -56,8 +60,30 @@ module decode_stage(
         .clk(clk), 
         .reset_n(reset_n), 
         .instruction(instruction),
-        .control(controls)
+        .control(controls),
+        .decode_failed(decode_failed)
     );
+
+
+    always_comb begin: check_illegal_regs
+        reg_illegal = 1'b0;
+
+        //if target register is illegal
+        if (reg_rd_id == 0 || reg_rd_id >= REGISTER_FILE_SIZE) begin
+            reg_illegal = 1'b1;
+        end
+
+        //if source registers are illegal
+        if ((controls.encoding == R_TYPE||controls.encoding == I_TYPE||controls.encoding == S_TYPE
+        ||controls.encoding == B_TYPE)&&instruction.rs1 >= REGISTER_FILE_SIZE) begin
+            reg_illegal = 1'b1;
+        end
+
+        if ((controls.encoding == R_TYPE||controls.encoding == S_TYPE||controls.encoding == B_TYPE)
+        && instruction.rs2 >= REGISTER_FILE_SIZE) begin
+            reg_illegal = 1'b1;
+        end
+    end
     
    
     assign reg_rd_id = instruction.rd;
@@ -66,4 +92,5 @@ module decode_stage(
     assign immediate_data = immediate_extension(instruction, controls.encoding);
     assign control_signals = controls;
     assign pc_out = pc_in;
+    assign instruction_illegal = decode_failed || reg_illegal;
 endmodule

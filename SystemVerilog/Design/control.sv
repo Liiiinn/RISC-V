@@ -6,12 +6,14 @@ import common::*;
 module control(
     input clk,
     input reset_n,
-    input instruction_type instruction, 
-    output control_type control
+    input instruction_type instruction,
+    output control_type control,
+    output logic decode_failed
 );  
     
     always_comb begin
         control = '0;
+        decode_failed = 1'b0;
 
         //RV32I
         case (instruction.opcode)
@@ -31,6 +33,7 @@ module control(
                     4'b1_101: control.alu_op = ALU_SRA;
                     4'b?_110: control.alu_op = ALU_OR;
                     4'b?_111: control.alu_op = ALU_AND;
+                    default:  decode_failed = 1'b1;
                 endcase
             end
 
@@ -50,6 +53,7 @@ module control(
                     4'b1_101: control.alu_op = ALU_SRA;    //srai
                     4'b?_110: control.alu_op = ALU_OR;     //ori
                     4'b?_111: control.alu_op = ALU_AND;    //andi
+                    default:  decode_failed = 1'b1;
                 endcase
             end
 
@@ -68,11 +72,13 @@ module control(
                     3'b010: control.mem_size = 2'b10; //lw, word
                     3'b100: control.mem_size = 2'b00; //lbu, byte
                     3'b101: control.mem_size = 2'b01; //lhu, half word
+                    default:  decode_failed = 1'b1;
                 endcase
 
                 unique casez (instruction.funct3)
                     3'b0??: control.mem_sign = 1'b1; //lb, lh, lw
                     3'b1??: control.mem_sign = 1'b0; //lbu, lhu
+                    default:  decode_failed = 1'b1;
                 endcase
             end
 
@@ -103,6 +109,7 @@ module control(
                     3'b000: control.mem_size = 2'b00; //sb, byte
                     3'b001: control.mem_size = 2'b01; //sh, half word
                     3'b010: control.mem_size = 2'b10; //sw, word
+                    default:  decode_failed = 1'b1;
                 endcase
             end
 
@@ -119,6 +126,7 @@ module control(
                     BGE_INSTRUCTION: control.alu_op = B_BGE;
                     BLTU_INSTRUCTION: control.alu_op = B_LTU;
                     BGEU_INSTRUCTION: control.alu_op = B_GEU;
+                    default:  decode_failed = 1'b1;
                 endcase
             end
 
@@ -138,6 +146,13 @@ module control(
 
                 control.alu_op = ALU_ADD;   //PC + imm
             end
+
+            default: begin
+                if (instruction == 32'h00001111)
+                    control = '0;
+                else
+                    decode_failed = 1'b1;
+            end
         endcase
-    end  
+    end
 endmodule
