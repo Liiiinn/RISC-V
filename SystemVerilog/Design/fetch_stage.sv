@@ -34,6 +34,8 @@ module fetch_stage(
     logic buffer_valid, buffer_valid_next;
     logic is_compressed, is_compressed_next;
     logic [31:0] current_instr, current_instr_next; 
+    logic [31:0] instr_offset, instr_offset_next;
+    logic [1:0] offset_cnt, offset_cnt_next;
     instruction_type decompressed_instr;
     instruction_type instr, instr_next;
     encoding_type instr_type, instr_type_next;
@@ -67,6 +69,8 @@ module fetch_stage(
             buffer_valid <= 1'b0;
             is_compressed <= 1'b0;
             current_instr <= '0;
+            instr_offset <= '0;
+            offset_cnt <= 2'd0;
         end
         else begin
             pc_reg <= pc_next;
@@ -87,6 +91,8 @@ module fetch_stage(
             buffer_valid <= buffer_valid_next;
             is_compressed <= is_compressed_next;
             current_instr <= current_instr_next;
+            instr_offset <= instr_offset_next;
+            offset_cnt <= offset_cnt_next;
         end
     end
 
@@ -182,8 +188,8 @@ module fetch_stage(
     end
 
     instr_decompressor decompressor(
-        .c_instr(current_instr[15:0]),
-        .is_compressed(is_compressed),
+        .c_instr(current_instr_next[15:0]),
+        .is_compressed(is_compressed_next),
         .decompressed_instr(decompressed_instr),
         .decompress_failed(decompress_failed)
     );
@@ -198,6 +204,20 @@ module fetch_stage(
         endcase
 
         branch_offset0_next = immediate_extension(instr_next, instr_type_next);
+
+        if (instr_type_next == B_TYPE) 
+        begin
+            offset_cnt_next = 2'd2;
+            instr_offset_next = 0;
+        end
+        else if (offset_cnt > 0) begin
+            offset_cnt_next = offset_cnt - 2'd1;
+            instr_offset_next = is_compressed_next ? instr_offset + 32'd2 : instr_offset + 32'd4;
+        end
+        else begin
+            offset_cnt_next = 2'd0;
+            instr_offset_next = 0;
+        end
     end
 
     always_comb begin: branch_prediction
@@ -228,7 +248,7 @@ module fetch_stage(
 
         if (pc_write) begin
             if (pc_src && prediction_buff0) begin
-                pc_next = pc_buff1 + branch_offset1 + (is_compressed_next ? 32'd4 : 32'd8);  //From IF to EXE, when prediction is right, need another 
+                pc_next = pc_buff1 + branch_offset1 + instr_offset_next;  //From IF to EXE, when prediction is right, need another 
                 // 8 offset for consistency;
                 //branch from insturction in EX stage,create buff for pc_reg,or the branch address is not correct
             end
