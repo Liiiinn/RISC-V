@@ -172,53 +172,46 @@ module instr_decompressor(
                                             end
                                         endcase
                                     end
-
-                                    // c.j
-                                    3'b101: begin
-                                        funct7[6] = c_instr[12]; // imm[20], sign extend
-                                        {funct7[5:0], rs2[4:1]} = {c_instr[8], c_instr[10:9], c_instr[6], 
-                                                                    c_instr[7], c_instr[2], c_instr[11], c_instr[5:3]}; // imm[10:1]
-                                        rs2[0] = c_instr[12]; // rs2[0] = imm[11]
-                                        {rs1, funct3} = {8{c_instr[12]}};
-                                        rd = 5'd0; // x0
-                                        opcode = 7'b1101111; // J_TYPE
-                                    end
-
-                                    // c.beqz
-                                    3'b110: begin
-                                        funct7[6] = c_instr[12]; // imm[12], sign extend
-                                        funct7[5:0] = {{2{c_instr[12]}}, c_instr[12], c_instr[6:5], c_instr[2]}; // imm[10:5]
-                                        rs2 = 5'b00000; // x0
-                                        rs1 = {2'b01, c_instr[9:7]}; // rs1 = 8 +　rs1'
-                                        rd[4:1] = {c_instr[11:10], c_instr[4:3]}; // imm[4:1]
-                                        rd[0] = c_instr[12]; // imm[11]
-                                        funct3 = 3'b000; // beq
-                                        opcode = 7'b1100011; // B_TYPE
-                                    end
-
-                                    // c.bnez
-                                    3'b111: begin
-                                        funct7[6] = c_instr[12]; // imm[12], sign extend
-                                        funct7[5:0] = {{2{c_instr[12]}}, c_instr[12], c_instr[6:5], c_instr[2]}; // imm[10:5]
-                                        rs2 = 5'b00000; // x0
-                                        rs1 = {2'b01, c_instr[9:7]}; // rs1 = 8 +　rs1'
-                                        rd[4:1] = {c_instr[11:10], c_instr[4:3]}; // imm[4:1]
-                                        rd[0] = c_instr[12]; // imm[11]
-                                        funct3 = 3'b001; // bne
-                                        opcode = 7'b1100011; // B_TYPE
-                                    end
-
-                                    // Invalid instruction
-                                    default: begin
-                                        decompress_failed = 1'b1;
-                                    end
                                 endcase
                             end
 
-                            // Invalid instruction
-                            default: begin
-                                decompress_failed = 1'b1;
+                            // c.j
+                            3'b101: begin
+                                funct7[6] = c_instr[12]; // imm[20], sign extend
+                                {funct7[5:0], rs2[4:1]} = {c_instr[8], c_instr[10:9], c_instr[6], 
+                                                            c_instr[7], c_instr[2], c_instr[11], c_instr[5:3]}; // imm[10:1]
+                                rs2[0] = c_instr[12]; // rs2[0] = imm[11]
+                                {rs1, funct3} = {8{c_instr[12]}};
+                                rd = 5'd0; // x0
+                                opcode = 7'b1101111; // J_TYPE
                             end
+
+                            // c.beqz
+                            3'b110: begin
+                                funct7[6] = c_instr[12]; // imm[12], sign extend
+                                funct7[5:0] = {{2{c_instr[12]}}, c_instr[12], c_instr[6:5], c_instr[2]}; // imm[10:5]
+                                rs2 = 5'b00000; // x0
+                                rs1 = {2'b01, c_instr[9:7]}; // rs1 = 8 +　rs1'
+                                rd[4:1] = {c_instr[11:10], c_instr[4:3]}; // imm[4:1]
+                                rd[0] = c_instr[12]; // imm[11]
+                                funct3 = 3'b000; // beq
+                                opcode = 7'b1100011; // B_TYPE
+                            end
+
+                            // c.bnez
+                            3'b111: begin
+                                funct7[6] = c_instr[12]; // imm[12], sign extend
+                                funct7[5:0] = {{2{c_instr[12]}}, c_instr[12], c_instr[6:5], c_instr[2]}; // imm[10:5]
+                                rs2 = 5'b00000; // x0
+                                rs1 = {2'b01, c_instr[9:7]}; // rs1 = 8 +　rs1'
+                                rd[4:1] = {c_instr[11:10], c_instr[4:3]}; // imm[4:1]
+                                rd[0] = c_instr[12]; // imm[11]
+                                funct3 = 3'b001; // bne
+                                opcode = 7'b1100011; // B_TYPE
+                            end
+
+                            // Invalid instruction
+                            default: decompress_failed = 1'b1;
                         endcase
                     end
                 end
