@@ -17,7 +17,8 @@ module fetch_stage(
     // output logic [31:0] pc_gshare,
     output logic if_id_flush,
     output logic id_ex_flush,
-    output logic decompress_failed
+    output logic decompress_failed,
+    output logic is_conditional_branch
 );
 
     logic [31:0] pc_next, pc_reg;
@@ -30,7 +31,7 @@ module fetch_stage(
 
     // RV32C extended signals
     logic [15:0] instr_buffer, instr_buffer_next;
-    logic [15:0] instr_recovery, instr_recovery_next;
+    // logic [15:0] instr_recovery, instr_recovery_next;
     logic buffer_valid, buffer_valid_next;
     logic is_compressed;
     logic [31:0] current_instr;
@@ -64,7 +65,7 @@ module fetch_stage(
             // RV32C extended signals
             state <= DIRECT;
             instr_buffer <= '0;
-            instr_recovery <= '0;
+            // instr_recovery <= '0;
             buffer_valid <= 1'b0;
             instr_offset <= '0;
             offset_cnt <= 2'd0;
@@ -82,7 +83,7 @@ module fetch_stage(
 
             state <= state_next;
             instr_buffer <= instr_buffer_next;
-            instr_recovery <= instr_recovery_next;
+            // instr_recovery <= instr_recovery_next;
             buffer_valid <= buffer_valid_next;
             instr_offset <= instr_offset_next;
             offset_cnt <= offset_cnt_next;
@@ -95,6 +96,8 @@ module fetch_stage(
     end
     
     always_comb begin: FSM_logic
+        state_next = state;
+
         case (state)
             DIRECT: begin
                 case (pc_reg[1])
@@ -166,10 +169,13 @@ module fetch_stage(
         if (if_id_flush_reg)
         begin
             current_instr = '0;
-            instr_buffer_next = instr_recovery_next;
+            // instr_buffer_next = instr_recovery_next;
             // buffer_valid_next = 1'b0;
             // is_compressed_next = 1'b0;
         end
+
+        if (!pc_write)
+            current_instr = '0;
     end
 
     instr_decompressor decompressor(
@@ -232,7 +238,7 @@ module fetch_stage(
         // address = (buffer_valid) ? pc_reg + 2 : pc_reg;
 
         if (pc_write) begin
-            if (pc_src && prediction_buff0) begin
+            if (pc_src && prediction_buff0 && !prediction_buff0_next) begin
                 pc_next = pc_buff1 + branch_offset1 + instr_offset_next;  //From IF to EXE, when prediction is right, need another 
                 // 8 offset for consistency;
                 //branch from insturction in EX stage,create buff for pc_reg,or the branch address is not correct
@@ -286,5 +292,6 @@ module fetch_stage(
     // assign instruction_out = if_id_flush_reg ?
     //     '0 : (is_compressed ? decompressed_instr : current_instr);
     assign instruction_out = is_compressed ? decompressed_instr : current_instr;
+    assign is_conditional_branch = instr_type_next == B_TYPE;
 
 endmodule
