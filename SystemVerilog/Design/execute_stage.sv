@@ -55,12 +55,17 @@ module execute_stage(
             right_operand = data2_or_imm;
     end
 
-    always_comb begin: jalr_target_address
+    always_comb begin: J_target_address
         if (control_in.encoding == I_TYPE && control_in.is_branch == 1'b1)
         begin
             alu_data = pc_in + 4;
             jalr_flag = 1'b1;
             jalr_target_offset = left_operand + immediate_data ; // used as new pc
+        end
+        else if (control_in.encoding == J_TYPE) begin
+            alu_data = pc_in + 4;
+            jalr_flag = 1'b0;
+            jalr_target_offset = '0;
         end
         else begin
             alu_data = alu_result;
