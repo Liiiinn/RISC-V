@@ -57,8 +57,6 @@ module decode_stage(
     
 
     control inst_control(
-        .clk(clk), 
-        .reset_n(reset_n), 
         .instruction(instruction),
         .control(controls),
         .decode_failed(decode_failed)

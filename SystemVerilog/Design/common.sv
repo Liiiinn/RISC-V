@@ -10,9 +10,6 @@ package common;
     //     ALU_SUB = 3'b011
     // } alu_op_type;
     // add some global parameters
-    localparam logic [1:0] Forward_from_mem = 2'b01;
-    localparam logic [1:0] Forward_from_ex  = 2'b10;  
-    localparam logic [1:0] Forward_None     = 2'b00;
 
     localparam REGISTER_FILE_SIZE = 32; // Number of registers in the register file
     
@@ -45,6 +42,12 @@ package common;
 
     } alu_op_type;
     
+    typedef enum logic [1:0]
+    {
+        FORWARD_NONE,
+        FORWARD_FROM_MEM,
+        FORWARD_FROM_EX
+    } forward_type;
     
     typedef enum logic [2:0]
     {

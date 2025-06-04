@@ -4,8 +4,6 @@ import common::*;
 
 
 module control(
-    input clk,
-    input reset_n,
     input instruction_type instruction,
     output control_type control,
     output logic decode_failed
@@ -93,9 +91,9 @@ module control(
             7'b1101111: begin
                 control.encoding = J_TYPE;
                 control.is_branch = 1'b0;
-                control.reg_write = 1'b0;
+                control.reg_write = 1'b1;
                 // instruction_out.rd = 0;
-                // control.alu_op = ALU_ADD;
+                control.alu_op = ALU_ADD;
             end
 
             //S type, SB, SH, SW
