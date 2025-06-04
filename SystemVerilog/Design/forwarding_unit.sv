@@ -10,38 +10,38 @@ module forwarding_unit(
     input logic reg_write_ex,
     input logic reg_write_mem,
     // input instruction_type instruction,
-    output logic [1:0] forward_rs1,
-    output logic [1:0] forward_rs2
+    output forward_type forward_rs1,
+    output forward_type forward_rs2
 );
-    logic real_write_mem;
+    // logic real_write_mem;
    
     // assign real_write_mem = (instruction.opcode != B_type) && 
     //                         (instruction.opcode != J_type) && 
     //                         reg_write_mem;
     // assign real_write_mem = reg_write_ex && reg_write_mem;
-    assign real_write_mem = reg_write_mem;
+    // assign real_write_mem = reg_write_mem;
 
     // Forward A
     always_comb begin
         if (rd_id_ex != 0 && rd_id_ex == rs1_id && reg_write_ex) 
-            forward_rs1 = Forward_from_ex; // Forward from EX stage
-        else if (rd_id_mem != 0 && rd_id_mem == rs1_id && real_write_mem)
-            forward_rs1 = Forward_from_mem; // Forward from MEM stage
+            forward_rs1 = FORWARD_FROM_EX; // Forward from EX stage
+        else if (rd_id_mem != 0 && rd_id_mem == rs1_id && reg_write_mem)
+            forward_rs1 = FORWARD_FROM_MEM; // Forward from MEM stage
         else
-            forward_rs1 = Forward_None; // No forwarding
+            forward_rs1 = FORWARD_NONE; // No forwarding
     end
  
     
     // Forward B
     always_comb begin
         if (rd_id_ex != 0 && rd_id_ex == rs2_id && reg_write_ex) begin
-            forward_rs2 = Forward_from_ex; // Forward from EX stage
+            forward_rs2 = FORWARD_FROM_EX; // Forward from EX stage
         end 
-        else if (rd_id_mem != 0 && rd_id_mem == rs2_id && real_write_mem) begin
-            forward_rs2 = Forward_from_mem; // Forward from MEM stage
+        else if (rd_id_mem != 0 && rd_id_mem == rs2_id && reg_write_mem) begin
+            forward_rs2 = FORWARD_FROM_MEM; // Forward from MEM stage
         end 
         else begin
-            forward_rs2 = Forward_None; // No forwarding
+            forward_rs2 = FORWARD_NONE; // No forwarding
         end
     end
 
