@@ -12,6 +12,7 @@ module fetch_stage(
     input [31:0] jalr_target_offset,
     input jalr_flag,
     output logic [31:0] address,
+    output logic [31:0] pc_out,
     output instruction_type instruction_out, 
     // output logic [31:0] branch_offset,
     // output logic [31:0] pc_gshare,
@@ -277,6 +278,7 @@ module fetch_stage(
     assign if_id_flush = if_id_flush_reg;
     assign id_ex_flush = id_ex_flush_reg;
 
+    assign pc_out = pc_reg;
     assign address = (buffer_valid) ? pc_reg + 32'd2 : pc_reg;
 
     assign pc_normal = pc_reg + (is_compressed ? 32'd2 : 32'd4);
