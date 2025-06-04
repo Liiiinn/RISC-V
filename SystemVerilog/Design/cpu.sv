@@ -30,6 +30,7 @@ module cpu(
     // logic [31:0]fetch_pc_gshare;
 
     logic [31:0] program_mem_address;
+    logic [31:0] fetch_pc;
     logic program_mem_write_enable;         
     logic [31:0] program_mem_write_data; 
     logic [31:0] program_mem_read_data;
@@ -131,7 +132,7 @@ module cpu(
 
     always_comb begin
         if(if_id_write) begin
-            if_id_reg_next.pc = program_mem_address;
+            if_id_reg_next.pc = fetch_pc;
             if_id_reg_next.instruction = uncompressed_instr;
             if_id_reg_next.decpompress_failed = fetch_decpompress_failed;
         end
@@ -208,6 +209,7 @@ module cpu(
         // .current_word(program_mem_current_data),
         // .next_word(program_mem_next_data),
         .address(fetch_read_address),
+        .pc_out(fetch_pc),
         // .pc_gshare(fetch_pc_gshare),
         // .branch_offset(fetch_offset),
         .instruction_out(uncompressed_instr),
