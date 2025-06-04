@@ -27,7 +27,10 @@ module fetch_stage(
     logic [31:0] pc_buff0, pc_buff0_next;
     logic [31:0] pc_buff1;
     logic [31:0] pc_recovery, pc_recovery_next;
-    logic prediction_buff0, prediction_buff0_next;
+    logic prediction_valid, prediction_valid_next;
+    logic prediction_buff;
+    logic mispredict_taken; // predict not taken, but actually taken
+    logic mispredict_not_taken; // predict taken, but actually not taken
 
     // RV32C extended signals
     logic [15:0] instr_buffer, instr_buffer_next;
@@ -57,11 +60,12 @@ module fetch_stage(
             pc_buff0 <= '0;
             pc_buff1 <= '0;
             pc_recovery <= '0;
+            prediction_valid <= 1'b0;
+            prediction_buff <= 1'b0;
 
             // Branch signals
             branch_offset0 <= '0;
             branch_offset1 <= '0;
-            prediction_buff0 <= '0;
             instr_type <= R_TYPE;
 
             // RV32C extended signals
@@ -77,10 +81,11 @@ module fetch_stage(
             pc_buff0 <= pc_buff0_next;
             pc_buff1 <= pc_buff0;
             pc_recovery <= pc_recovery_next;
+            prediction_valid <= prediction_valid_next;
+            prediction_buff <= prediction_valid;
 
             branch_offset0 <= branch_offset0_next;
             branch_offset1 <= branch_offset0;
-            prediction_buff0 <= prediction_buff0_next;
             instr_type <= instr_type_next;
 
             state <= state_next;
@@ -93,7 +98,7 @@ module fetch_stage(
     end
 
     always_comb begin: flush_logic
-        if_id_flush_reg = !(pc_src == prediction_buff0 && jalr_flag != 1);
+        if_id_flush_reg = pc_src ^ prediction_buff || jalr_flag;
         id_ex_flush_reg = if_id_flush_reg;
     end
     
@@ -213,7 +218,7 @@ module fetch_stage(
         end
     end
 
-    always_comb begin: branch_prediction
+    always_comb begin: branch_predict_logic
         // PC buffer
         if (instr_type_next == B_TYPE || instr_type_next == J_TYPE)
             pc_buff0_next = pc_reg;
@@ -221,7 +226,7 @@ module fetch_stage(
             pc_buff0_next = 0;
 
         // PC recovery
-        if (instr_type_next == B_TYPE && prediction)
+        if (instr_type_next == B_TYPE)
             pc_recovery_next = pc_reg + (is_compressed ? 32'd2 : 32'd4);
         else
             pc_recovery_next = pc_recovery;
@@ -230,10 +235,13 @@ module fetch_stage(
         // branch_offset1_next = branch_offset0; // jal or conditional branch 
 
         // prediction logic
-        if (instr_type == B_TYPE)
-            prediction_buff0_next = prediction;
+        if (instr_type_next == B_TYPE)
+            prediction_valid_next = prediction;
         else
-            prediction_buff0_next = 1'b0;
+            prediction_valid_next = 1'b0;
+
+        mispredict_taken = pc_src && !prediction_buff;
+        mispredict_not_taken = !pc_src && prediction_buff;
     end
 
     always_comb begin: optimized_pc_update
@@ -248,9 +256,9 @@ module fetch_stage(
             unique casez ({
                 jalr_flag,
                 (current_instr == 32'h00001111),
-                if_id_flush_reg,
-                (pc_src && prediction_buff0 && !prediction_buff0_next),
-                (pc_src && !prediction_buff0),
+                mispredict_not_taken,
+                (pc_src && prediction_buff && !prediction_valid),
+                mispredict_taken,
                 (instr_type_next == J_TYPE),
                 (instr_type_next == B_TYPE)})
                 
@@ -261,7 +269,7 @@ module fetch_stage(
                 7'b00001??: pc_next = pc_mispred2; // when not taken, just jump directly;
                 7'b000001?: pc_next = pc_branch;
                 7'b0000001: pc_next = prediction ? pc_branch : pc_normal;
-                7'b0000000: pc_next = pc_normal;
+                default: pc_next = pc_normal;
             endcase
         end
     end
