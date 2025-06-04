@@ -148,10 +148,12 @@ module control(
             end
 
             default: begin
-                if (instruction == 32'h00001111)
+                if (instruction == 32'h00001111 || instruction == 32'h00000000) begin
                     control = '0;
-                else
+                end
+                else begin
                     decode_failed = 1'b1;
+                end
             end
         endcase
     end

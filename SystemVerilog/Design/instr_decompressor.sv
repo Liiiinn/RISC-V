@@ -57,10 +57,10 @@ module instr_decompressor(
                     if (c_instr == 16'h1111) begin
                         funct7 = 7'b0000000;
                         rs2 = 5'b00000;
-                        rs1 = 5'b00001;
-                        funct3 = 3'b000;
-                        rd = 5'b10001;
-                        opcode = 7'b0001000;
+                        rs1 = 5'b00000;
+                        funct3 = 3'b001;
+                        rd = 5'b00010;
+                        opcode = 7'b0010001;
                     end
                     else begin
                         case (c_instr[15:13])

@@ -18,6 +18,7 @@ module fetch_stage(
     output logic if_id_flush,
     output logic id_ex_flush,
     output logic decompress_failed,
+    output logic run_finished,
     output logic is_conditional_branch
 );
 
@@ -236,6 +237,7 @@ module fetch_stage(
 
     always_comb begin: pc_update
         // address = (buffer_valid) ? pc_reg + 2 : pc_reg;
+        run_finished = 1'b0;
 
         if (pc_write) begin
             if (pc_src && prediction_buff0 && !prediction_buff0_next) begin
@@ -263,6 +265,7 @@ module fetch_stage(
             end
             else if (current_instr == 32'h00001111) begin // end instruction
                 pc_next = 0;
+                run_finished = 1'b1;
             end
             else begin
                 pc_next = pc_reg + (is_compressed ? 32'd2 : 32'd4); //do not consider jalr

@@ -69,8 +69,10 @@ module decode_stage(
         reg_illegal = 1'b0;
 
         //if target register is illegal
-        if (reg_rd_id == 0 || reg_rd_id >= REGISTER_FILE_SIZE) begin
-            reg_illegal = 1'b1;
+        if (((controls.encoding == R_TYPE||controls.encoding == I_TYPE||controls.encoding == U_TYPE||controls.encoding == J_TYPE)&&reg_rd_id == 0) 
+        || reg_rd_id >= REGISTER_FILE_SIZE) begin
+            if(instruction != 32'b00000000_00000_00000_000_00000_0010011)
+                reg_illegal = 1'b1;
         end
 
         //if source registers are illegal
@@ -92,5 +94,5 @@ module decode_stage(
     assign immediate_data = immediate_extension(instruction, controls.encoding);
     assign control_signals = controls;
     assign pc_out = pc_in;
-    assign instruction_illegal = decode_failed || reg_illegal;
+    assign instruction_illegal = decode_failed | reg_illegal;
 endmodule

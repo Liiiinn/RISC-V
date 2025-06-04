@@ -14,7 +14,7 @@ module cpu(
     logic [31:0] uart_write_address;
     logic run_flag;
     logic run_flag_next;
-    logic run_finished;
+    //logic run_finished;
     logic stall_pc_write;
 
     logic pc_src;
@@ -173,10 +173,10 @@ module cpu(
 
 
     always_comb begin
-        if(program_mem_write_data[15:0] == 16'h1111) begin
+        if(program_mem_write_data[15:0] == 16'h1111 && run_finished == 0) begin
             run_flag_next = 1;
         end
-        else if(uncompressed_instr == 32'h00001111) begin
+        else if(run_finished == 1) begin
             run_flag_next = 0;
         end
         else begin
@@ -213,6 +213,7 @@ module cpu(
         .instruction_out(uncompressed_instr),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush),
+        .run_finished(run_finished),
         .decompress_failed(fetch_decpompress_failed)
     );
 
@@ -328,7 +329,7 @@ module cpu(
     assign wb_write_back_en = mem_wb_reg.control.reg_write;
     assign wb_result = mem_wb_reg.control.mem_read ? mem_wb_reg.memory_data : mem_wb_reg.alu_data;
     assign id_ex_flush = branch_id_ex_flush | stall_id_ex_flush;
-    assign indication = fetch_decpompress_failed | decode_instruction_illegal | execute_overflow;
+    assign indication = id_ex_reg.decpompress_failed | id_ex_reg.instruction_illegal | execute_overflow;
     assign pc_write = stall_pc_write & run_flag;
     //assign alu_out = execute_alu_data;
 endmodule
