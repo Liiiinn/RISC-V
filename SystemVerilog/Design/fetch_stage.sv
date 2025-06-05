@@ -11,6 +11,7 @@ module fetch_stage(
     input prediction,
     input [31:0] jalr_target_offset,
     input jalr_flag,
+    input run_flag,
     output logic [31:0] address,
     output logic [31:0] pc_out,
     output instruction_type instruction_out, 
@@ -44,14 +45,14 @@ module fetch_stage(
     logic [1:0] offset_cnt, offset_cnt_next;
     instruction_type decompressed_instr;
     instruction_type instr;
-    encoding_type instr_type, instr_type_next;
+    encoding_type instr_type;
 
     logic if_id_flush_reg, id_ex_flush_reg;
     logic run_finished;
 
     logic [31:0] pc_normal, pc_branch, pc_mispred1, pc_mispred2;
 
-    typedef enum {DIRECT, USE_BUFFER} state_type;
+    typedef enum {IDLE, DIRECT, USE_BUFFER} state_type;
     state_type state, state_next;
 
     always_ff @(posedge clk or negedge reset_n)
@@ -69,10 +70,9 @@ module fetch_stage(
             // Branch signals
             branch_offset0 <= '0;
             branch_offset1 <= '0;
-            instr_type <= R_TYPE;
 
             // RV32C extended signals
-            state <= DIRECT;
+            state <= IDLE;
             instr_buffer <= '0;
             // instr_recovery <= '0;
             buffer_valid <= 1'b0;
@@ -91,7 +91,6 @@ module fetch_stage(
 
             branch_offset0 <= branch_offset0_next;
             branch_offset1 <= branch_offset0;
-            instr_type <= instr_type_next;
 
             state <= state_next;
             instr_buffer <= instr_buffer_next;
@@ -113,6 +112,13 @@ module fetch_stage(
         state_next = state;
 
         case (state)
+            IDLE: begin
+                if (run_flag)
+                    state_next = DIRECT;
+                else
+                    state_next = IDLE; // wait for run_flag
+            end
+
             DIRECT: begin
                 case (pc_reg[1])
                     1'b0: begin
@@ -124,7 +130,10 @@ module fetch_stage(
                     end
 
                     1'b1: state_next = DIRECT; // high 16 bits is compressed
-                endcase 
+                endcase
+
+                if (run_finished)
+                    state_next = IDLE; // end instruction
             end
 
             USE_BUFFER: begin
@@ -132,6 +141,9 @@ module fetch_stage(
                     state_next = USE_BUFFER;
                 else
                     state_next = DIRECT; // high 16 bits is compressed
+
+                if (run_finished)
+                    state_next = IDLE; // end instruction
             end
         endcase
     end
@@ -143,6 +155,13 @@ module fetch_stage(
         is_compressed = 1'b0;
 
         case (state)
+            IDLE: begin
+                current_instr = '0;
+                instr_buffer_next = '0;
+                buffer_valid_next = 1'b0;
+                is_compressed = 1'b0;
+            end
+            
             DIRECT: begin
                 case (pc_reg[1])
                     1'b0: begin
@@ -203,14 +222,14 @@ module fetch_stage(
         instr = is_compressed ? decompressed_instr : current_instr;
 
         case (instr.opcode)
-            7'b1100011: instr_type_next = B_TYPE;
-            7'b1101111: instr_type_next = J_TYPE;
-            default: instr_type_next = R_TYPE;
+            7'b1100011: instr_type = B_TYPE;
+            7'b1101111: instr_type = J_TYPE;
+            default: instr_type = R_TYPE;
         endcase
 
-        branch_offset0_next = immediate_extension(instr, instr_type_next);
+        branch_offset0_next = immediate_extension(instr, instr_type);
 
-        if (instr_type_next == B_TYPE) 
+        if (instr_type == B_TYPE) 
         begin
             offset_cnt_next = 2'd2;
             instr_offset_next = 0;
@@ -227,13 +246,13 @@ module fetch_stage(
 
     always_comb begin: branch_predict_logic
         // PC buffer
-        if (instr_type_next == B_TYPE || instr_type_next == J_TYPE)
+        if (instr_type == B_TYPE || instr_type == J_TYPE)
             pc_buff0_next = pc_reg;
         else
             pc_buff0_next = 0;
 
         // PC recovery
-        if (instr_type_next == B_TYPE)
+        if (instr_type == B_TYPE)
             pc_recovery_next = pc_reg + (is_compressed ? 32'd2 : 32'd4);
         else
             pc_recovery_next = pc_recovery;
@@ -242,7 +261,7 @@ module fetch_stage(
         // branch_offset1_next = branch_offset0; // jal or conditional branch 
 
         // prediction logic
-        if (instr_type_next == B_TYPE)
+        if (instr_type == B_TYPE)
             prediction_valid_next = prediction;
         else
             prediction_valid_next = 1'b0;
@@ -258,6 +277,8 @@ module fetch_stage(
         // pc_mispred2 = pc_buff1 + branch_offset1;
         run_finished_next = run_finished;
 
+        pc_next = run_flag ? pc_reg : 32'd0;
+
         if (!pc_write) 
             pc_next = pc_reg; // stall
         else begin
@@ -267,8 +288,8 @@ module fetch_stage(
                 mispredict_not_taken,
                 (pc_src && prediction_buff && !prediction_valid),
                 mispredict_taken,
-                (instr_type_next == J_TYPE),
-                (instr_type_next == B_TYPE)})
+                (instr_type == J_TYPE),
+                (instr_type == B_TYPE)})
                 
                 7'b1??????: pc_next = jalr_target_offset;
                 7'b01?????: begin
@@ -297,7 +318,7 @@ module fetch_stage(
     assign pc_mispred2 = pc_buff1 + branch_offset1;
 
     // always_comb begin: address_logic
-    //     case (instr_type_next)
+    //     case (instr_type)
     //         B_TYPE, J_TYPE: address = (buffer_valid) ? pc_next + 2 : pc_next;
     //         R_TYPE: address = (buffer_valid) ? pc_reg + 2 : pc_reg;
     //     endcase        
@@ -310,6 +331,6 @@ module fetch_stage(
     // assign instruction_out = if_id_flush_reg ?
     //     '0 : (is_compressed ? decompressed_instr : current_instr);
     assign instruction_out = is_compressed ? decompressed_instr : current_instr;
-    assign is_conditional_branch = instr_type_next == B_TYPE;
+    assign is_conditional_branch = instr_type == B_TYPE;
 
 endmodule

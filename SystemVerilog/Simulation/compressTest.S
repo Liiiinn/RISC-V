@@ -18,6 +18,92 @@
     c.sw x11, 4(x13) 
     c.lw x12, 4(x13)
 
+TEST 3
+    lui x20, 0xfedcc      # x20 = 0xfedcc000 = -19087360
+    addi x20, x20, 0x000  # 
+    addi x20, x20, -1384  # x20 = -19088744
+
+    addi x21, x21, 6      # x21 = x21 + 6 (assuming x21 was 0, x21 = 6)
+    add x22, x21, x20     # x22 = 6 + (-19137896) = -19137890
+    sub x23, x20, x22     # x23 = -19137896 - (-19137890) = -6
+    add x24, x23, x0      # x24 = -6 + 0 = -6
+    sub x24, x0, x24      # x24 = 0 - (-6) = 6
+
+    nop
+    nop
+
+TEST 4
+# Finds sum of the first N numbers recursively.
+
+# x1: Return Address
+# x30: Stack Pointer
+# x10 : n but also sum function's return value
+
+main:
+    addi x10, x0, 1        # n
+    jal x1, SUM             # Sum(n)
+    jal x1, END
+
+SUM:
+    sw x1, 0(x30)           # Save return address on stack
+    sw x10, 4(x30)          # Save argument n
+    addi x30, x30, 8        # Adjust stack pointer
+
+    addi x11, x10, -1       # x11 = n - 1
+    nop
+    nop
+    bge x11, x0, RECUR      # if (n - 1) >= 0 then do a recursive call
+    addi x10, x0, 0         # Return 0 (base case)
+    addi x30, x30, -8       # Pop 2 items
+    ret
+RECUR:
+    addi x10, x10, -1       # n - 1
+    jal x1, SUM             # Sum(n-1)
+    addi x20, x10, 0        # x20 = rsult of sum. i.e. x20 = Sum(n - 1)
+    addi x30, x30, -8       # Adjust the stack
+    lw x10, 4(x30)          # Restore n
+    lw x1, 0(x30)           # Restore return address
+    add x10, x10, x20       # x10 = n + sum(n - 1)
+    nop
+    nop
+    ret                     # return x10
+
+END:
+nop
+nop
+
+
+TEST 5
+main:
+    lui x1, 0xa9876
+    addi x1, x1, 0x543
+
+    sw x1, 0(x0)
+
+    lb x2, 0(x0)
+    lb x3, 1(x0)
+    lb x4, 2(x0)
+    lb x5, 3(x0)
+
+    lbu x6, 2(x0)
+
+    lh x7, 0(x0)
+    lh x8, 2(x0)
+
+    lhu x9, 2(x0)
+
+    lw x10, 0(x0)
+
+    sb x2, 4(x0)
+    sb x3, 5(x0)
+    sh x8, 6(x0)
+
+    lw x11, 4(x0)
+
+    nop
+    nop
+    nop
+
 
 TEST 6
     addi x12, x0, 0     # x12 = 0

@@ -13,9 +13,9 @@ module gshare_predictor #(
     output logic prediction        // Prediction result (taken or not taken)
     );
 
-    logic [GHR_BITS-1:0] ghr,ghr_d;  // Global History Register    
-    logic [1:0] bht [0:BHT_SIZE-1];  // Branch History Table   
-    logic [$clog2(BHT_SIZE)-1:0] index;// BHT index
+    logic [GHR_BITS - 1:0] ghr, ghr_d;  // Global History Register    
+    logic [1:0] bht [0:BHT_SIZE - 1];  // Branch History Table   
+    logic [$clog2(BHT_SIZE) - 1:0] index;// BHT index
     logic [1:0] counter;  // counter now
     logic [7:0] pc_part;
     logic [31:0] pc_generating_branch;
@@ -28,43 +28,29 @@ module gshare_predictor #(
     assign prediction = counter[1];
     
     always_ff @(posedge clk or negedge reset_n) begin
-            if (!reset_n) begin
-                ghr <= '0;
-                ghr_d <= '0;
-                // index_d <= '0;
-            end else begin
-                ghr_d <= ghr;
-                // index_d <= index;
-                if (update) begin
-                    ghr <= {ghr[GHR_BITS - 2 : 0], actual_taken};
-                    // index <= (pc[GHR_BITS+1:2]) ^ ghr;
-                end
+        if (!reset_n)
+        begin
+            ghr <= '0;
+            ghr_d <= '0;
+
+            for (int i = 0; i < BHT_SIZE; i ++) begin
+                bht[i] <= 2'b01; // Initialize BHT to weakly taken
             end
         end
-  
-    integer i;
-  
-    // Initialize and read current counter value
-    always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin
-      //     ghr <= '0;
-            for (int i = 0; i < BHT_SIZE; i++) begin
-                bht[i] <= 2'b10; // test both taken / not taken
-            end
-        end 
         else begin
-            // Update predictor
+            ghr_d <= ghr; // Store previous GHR value
+            
             if (update) begin
-                // Update BHT saturating counter
+                // Update GHR with the actual branch result
+                ghr <= {ghr[GHR_BITS - 2 : 0], actual_taken};
+                
+                // Update BHT based on the actual branch result
                 case (bht[index])
-                    2'b00: bht[index] <= actual_taken ? 2'b01 : 2'b00;// strong not taken
-                    2'b01: bht[index] <= actual_taken ? 2'b10 : 2'b00;// weak not taken
-                    2'b10: bht[index] <= actual_taken ? 2'b11 : 2'b01;// weak taken
-                    2'b11: bht[index] <= actual_taken ? 2'b11 : 2'b10;// strong taken
+                    2'b00: bht[index] <= actual_taken ? 2'b01 : 2'b00; // Strong not taken
+                    2'b01: bht[index] <= actual_taken ? 2'b10 : 2'b00; // Weak not taken
+                    2'b10: bht[index] <= actual_taken ? 2'b11 : 2'b01; // Weak taken
+                    2'b11: bht[index] <= actual_taken ? 2'b11 : 2'b10; // Strong taken
                 endcase
-
-                // Update GHR (shift register)
-                // ghr <= {ghr[GHR_BITS-2:0], actual_taken};
             end
         end
     end
