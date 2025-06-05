@@ -16,7 +16,7 @@ module register_file(
 
     //parameter REGISTER_FILE_SIZE = 32;
     
-    logic [31:0] registers [0:REGISTER_FILE_SIZE-1] = '{default:0};
+    logic [31:0] registers [0:REGISTER_FILE_SIZE-1] ;
     
     
     always_ff @(posedge clk) begin
