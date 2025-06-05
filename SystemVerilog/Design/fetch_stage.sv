@@ -19,7 +19,7 @@ module fetch_stage(
     output logic if_id_flush,
     output logic id_ex_flush,
     output logic decompress_failed,
-    output logic run_finished,
+    output logic run_finished_next,
     output logic is_conditional_branch
 );
 
@@ -47,6 +47,7 @@ module fetch_stage(
     encoding_type instr_type, instr_type_next;
 
     logic if_id_flush_reg, id_ex_flush_reg;
+    logic run_finished;
 
     logic [31:0] pc_normal, pc_branch, pc_mispred1, pc_mispred2;
 
@@ -77,6 +78,8 @@ module fetch_stage(
             buffer_valid <= 1'b0;
             instr_offset <= '0;
             offset_cnt <= 2'd0;
+
+            run_finished <= 1'b0;
         end
         else begin
             pc_reg <= pc_next;
@@ -96,6 +99,8 @@ module fetch_stage(
             buffer_valid <= buffer_valid_next;
             instr_offset <= instr_offset_next;
             offset_cnt <= offset_cnt_next;
+
+            run_finished <= run_finished_next;
         end
     end
 
@@ -251,6 +256,7 @@ module fetch_stage(
         // pc_branch = pc_reg + branch_offset0_next;
         // pc_mispred1 = pc_buff1 + branch_offset1 + instr_offset_next;
         // pc_mispred2 = pc_buff1 + branch_offset1;
+        run_finished_next = run_finished;
 
         if (!pc_write) 
             pc_next = pc_reg; // stall
@@ -265,7 +271,10 @@ module fetch_stage(
                 (instr_type_next == B_TYPE)})
                 
                 7'b1??????: pc_next = jalr_target_offset;
-                7'b01?????: pc_next = 32'd0; // end instruction
+                7'b01?????: begin
+                    pc_next = 32'd0; // end instruction
+                    run_finished_next = 1'b1;
+                end
                 7'b001????: pc_next = pc_recovery_next;
                 7'b0001???: pc_next = pc_mispred1;
                 7'b00001??: pc_next = pc_mispred2; // when not taken, just jump directly;

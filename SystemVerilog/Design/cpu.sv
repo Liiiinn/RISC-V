@@ -215,7 +215,7 @@ module cpu(
         .instruction_out(uncompressed_instr),
         .if_id_flush(if_id_flush),
         .id_ex_flush(branch_id_ex_flush),
-        .run_finished(run_finished),
+        .run_finished_next(run_finished),
         .decompress_failed(fetch_decpompress_failed)
     );
 
@@ -251,8 +251,8 @@ module cpu(
     
     
     execute_stage inst_execute_stage(
-        .clk(clk), 
-        .reset_n(reset_n),
+        //.clk(clk), 
+        //.reset_n(reset_n),
         .data1(id_ex_reg.data1),
         .data2(id_ex_reg.data2),
         .immediate_data(id_ex_reg.immediate_data),
