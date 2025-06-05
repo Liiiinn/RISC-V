@@ -10,7 +10,7 @@ module uart(
 );
 
     parameter BAUD = 115200;
-    localparam FREQUENCY_IN_HZ = 100_000_000;
+    localparam FREQUENCY_IN_HZ = 40_000_000;
     localparam BAUD_COUNT_CHECK = FREQUENCY_IN_HZ / BAUD;
     localparam NUM_DATA_BITS = 8;  
 
