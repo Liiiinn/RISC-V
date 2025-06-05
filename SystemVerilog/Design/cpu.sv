@@ -14,7 +14,7 @@ module cpu(
     logic [31:0] uart_write_address;
     logic run_flag;
     logic run_flag_next;
-    //logic run_finished;
+    logic run_finished;
     logic stall_pc_write;
     logic indication_trigger;
     logic indication_extended;
