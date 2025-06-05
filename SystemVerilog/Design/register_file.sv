@@ -21,7 +21,7 @@ module register_file(
     
     always_ff @(posedge clk) begin
         if (!reset_n) begin
-            registers = '{default:0};
+            registers <= '{default:0};
         end 
         else if (write_en) begin
             registers[write_id] <= write_data;     
