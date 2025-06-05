@@ -104,7 +104,7 @@ package common;
         logic [31:0] data2;
         logic [31:0] immediate_data;
         logic [31:0] pc; //add new element
-        instruction_type instruction;
+        //instruction_type instruction;
         control_type control;
         logic decpompress_failed;
         logic instruction_illegal;
