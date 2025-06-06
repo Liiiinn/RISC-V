@@ -23,7 +23,7 @@ module register_file(
         if (!reset_n) begin
             registers <= '{default:0};
         end 
-        else if (write_en) begin
+        else if (write_en && write_id != 0) begin
             registers[write_id] <= write_data;     
         end
     end

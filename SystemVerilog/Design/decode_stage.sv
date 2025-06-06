@@ -67,9 +67,9 @@ module decode_stage(
         reg_illegal = 1'b0;
 
         //if target register is illegal
-        if (((controls.encoding == R_TYPE||controls.encoding == I_TYPE||controls.encoding == U_TYPE||controls.encoding == J_TYPE)&&reg_rd_id == 0) 
-        || reg_rd_id >= REGISTER_FILE_SIZE) begin
-            if(instruction != 32'b00000000_00000_00000_000_00000_0010011)
+        if (((controls.encoding == R_TYPE||controls.encoding == I_TYPE||controls.encoding == U_TYPE||controls.encoding == J_TYPE) 
+            && reg_rd_id == 0) || reg_rd_id >= REGISTER_FILE_SIZE) begin
+            if(instruction.opcode != 7'b1100111 &&instruction != 32'b00000000_00000_00000_000_00000_0010011)
                 reg_illegal = 1'b1;
         end
 
