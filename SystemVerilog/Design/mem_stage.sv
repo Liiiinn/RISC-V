@@ -18,7 +18,7 @@ module mem_stage(
 
     data_memory inst_mem(
         .clk(clk),        
-        .byte_address(alu_data_out[9:0]),
+        .byte_address(alu_data_in[9:0]),
         .write_enable(control_in.mem_write),
         .write_data(memory_data_in),
         .mem_size(control_in.mem_size),

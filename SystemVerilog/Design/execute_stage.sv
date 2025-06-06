@@ -44,10 +44,14 @@ module execute_stage(
             default: left_operand = data1;
         endcase
 
-        case (forward_rs2)
-            FORWARD_FROM_EX: right_operand = mem_forward_data;
-            FORWARD_FROM_MEM: right_operand = wb_forward_data;
-            default: right_operand = data2_or_imm;
+        case (control_in.encoding)
+            R_TYPE, S_TYPE, B_TYPE:
+                case (forward_rs2)
+                    FORWARD_FROM_EX: right_operand = mem_forward_data;
+                    FORWARD_FROM_MEM: right_operand = wb_forward_data;
+                    default: right_operand = data2_or_imm;
+                endcase
+            default: right_operand = data2_or_imm; // For I_TYPE and U_TYPE, right_operand is always data2_or_imm
         endcase
 
         if (control_in.encoding == S_TYPE)
