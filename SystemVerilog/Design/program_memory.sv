@@ -148,22 +148,22 @@ module program_memory (
         // ram[18] = 32'h0000_0013;  // nop
 
         // test 7
-        ram[0] = 32'h0000_0093; // addi x1, x0, 0
-        ram[1] = 32'h448d_4415; // c.li x8, 5; then c.li x9 3
-        ram[2] = 32'h14f9_94a2; // c.add x9, x8; then c.addi x9, -2
-        ram[3] = 32'h8c89_453d; // c.li x10, 15; then c.sub x9, x10
-        ram[4] = 32'h8085_0506; // c.slli x10, 1; then c.srli x9, 1
-        ram[5] = 32'hc388_4781; // c.li x15, 0; then c.sw x10, 0(x15)
-        ram[6] = 32'h0791_c3c4; // c.sw x9, 4(x15); then c.addi x15, 4
-        ram[7] = 32'ha603_438c; // c.lw x11, 0(x15); then low half of lw x12, -4(x15)
-        ram[8] = 32'h86aa_ffc7; // high half of lw x12, -4(x15); then c.mv x13, x10
-        ram[9] = 32'hc699_8e91; // c.sub x13, x12; then c.beqz x13, l
-        ram[10] = 32'h0010_8093; // addi x1, x1, 1
-        ram[11] = 32'h0010_8093; // addi x1, x1, 1
-        ram[12] = 32'h0010_8093; // addi x1, x1, 1
-        ram[13] = 32'h1230_8093; // l: addi x1, x1, 0x123
-        ram[14] = 32'h0000_0013; // nop
-        ram[15] = 32'h0000_0013; // nop
+        // ram[0] = 32'h0000_0093; // addi x1, x0, 0
+        // ram[1] = 32'h448d_4415; // c.li x8, 5; then c.li x9 3
+        // ram[2] = 32'h14f9_94a2; // c.add x9, x8; then c.addi x9, -2
+        // ram[3] = 32'h8c89_453d; // c.li x10, 15; then c.sub x9, x10
+        // ram[4] = 32'h8085_0506; // c.slli x10, 1; then c.srli x9, 1
+        // ram[5] = 32'hc388_4781; // c.li x15, 0; then c.sw x10, 0(x15)
+        // ram[6] = 32'h0791_c3c4; // c.sw x9, 4(x15); then c.addi x15, 4
+        // ram[7] = 32'ha603_438c; // c.lw x11, 0(x15); then low half of lw x12, -4(x15)
+        // ram[8] = 32'h86aa_ffc7; // high half of lw x12, -4(x15); then c.mv x13, x10
+        // ram[9] = 32'hc699_8e91; // c.sub x13, x12; then c.beqz x13, l
+        // ram[10] = 32'h0010_8093; // addi x1, x1, 1
+        // ram[11] = 32'h0010_8093; // addi x1, x1, 1
+        // ram[12] = 32'h0010_8093; // addi x1, x1, 1
+        // ram[13] = 32'h1230_8093; // l: addi x1, x1, 0x123
+        // ram[14] = 32'h0000_0013; // nop
+        // ram[15] = 32'h0000_0013; // nop
 
         // // test 8
         // ram[0] = 32'h8000_0437; // lui x8, 0x8000
