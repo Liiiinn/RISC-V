@@ -35,13 +35,25 @@ module alu(
         endcase
     end
 
+    // always_comb begin
+    //     if (control == ALU_ADD) begin
+    //         overflow = (left_operand[31] & right_operand[31]) ^ (temp_result[30] & left_operand[30]);
+    //     end
+    //     else if (control == ALU_SUB) begin
+    //         overflow = ((left_operand[31] & ~right_operand[31]) ^ (temp_result[30] & left_operand[30])) 
+    //             || left_operand == 32'h8000_0000 || right_operand == 32'h8000_0000;
+    //     end
+    //     else begin
+    //         overflow = 1'b0;
+    //     end
+    // end
+
     always_comb begin
         if (control == ALU_ADD) begin
-            overflow = (left_operand[31] & right_operand[31]) ^ (temp_result[30] & left_operand[30]);
+            overflow = (~(left_operand[31] ^ right_operand[31])) & (left_operand[31] ^ temp_result[31]);
         end
         else if (control == ALU_SUB) begin
-            overflow = ((left_operand[31] & ~right_operand[31]) ^ (temp_result[30] & left_operand[30])) 
-                || left_operand == 32'h8000_0000 || right_operand == 32'h8000_0000;
+            overflow = ((left_operand[31] ^ right_operand[31]) & (left_operand[31] ^ temp_result[31]));
         end
         else begin
             overflow = 1'b0;
