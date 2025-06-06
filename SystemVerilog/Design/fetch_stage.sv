@@ -113,8 +113,18 @@ module fetch_stage(
 
         case (state)
             IDLE: begin
+                // if (run_flag)
+                //     state_next = DIRECT;
+                // else
+                //     state_next = IDLE; // wait for run_flag
+
                 if (run_flag)
-                    state_next = DIRECT;
+                begin
+                    if (data[1:0] != 2'b11 && data[17:16] == 2'b11)
+                            state_next = USE_BUFFER;
+                    else
+                        state_next = DIRECT;
+                end
                 else
                     state_next = IDLE; // wait for run_flag
             end
@@ -227,7 +237,7 @@ module fetch_stage(
             default: instr_type = R_TYPE;
         endcase
 
-        branch_offset0_next = immediate_extension(instr, instr_type);
+        branch_offset0_next = instr_type != R_TYPE ? immediate_extension(instr, instr_type) : 0;
 
         if (instr_type == B_TYPE) 
         begin
@@ -277,12 +287,13 @@ module fetch_stage(
         // pc_mispred2 = pc_buff1 + branch_offset1;
         run_finished_next = run_finished;
 
-        pc_next = run_flag ? pc_reg : 32'd0;
+        // pc_next = run_flag ? pc_reg : 32'd0;
 
         if (!pc_write) 
             pc_next = pc_reg; // stall
         else begin
             unique casez ({
+                (state == IDLE),
                 jalr_flag,
                 (current_instr == 32'h00001111),
                 mispredict_not_taken,
@@ -291,16 +302,17 @@ module fetch_stage(
                 (instr_type == J_TYPE),
                 (instr_type == B_TYPE)})
                 
-                7'b1??????: pc_next = jalr_target_offset;
-                7'b01?????: begin
+                8'b1???????: pc_next = 32'd0;
+                8'b01??????: pc_next = jalr_target_offset;
+                8'b001?????: begin
                     pc_next = 32'd0; // end instruction
                     run_finished_next = 1'b1;
                 end
-                7'b001????: pc_next = pc_recovery_next;
-                7'b0001???: pc_next = pc_mispred1;
-                7'b00001??: pc_next = pc_mispred2; // when not taken, just jump directly;
-                7'b000001?: pc_next = pc_branch;
-                7'b0000001: pc_next = prediction ? pc_branch : pc_normal;
+                8'b0001????: pc_next = pc_recovery_next;
+                8'b00001???: pc_next = pc_mispred1;
+                8'b000001??: pc_next = pc_mispred2; // when not taken, just jump directly;
+                8'b0000001?: pc_next = pc_branch;
+                8'b00000001: pc_next = prediction ? pc_branch : pc_normal;
                 default: pc_next = pc_normal;
             endcase
         end
