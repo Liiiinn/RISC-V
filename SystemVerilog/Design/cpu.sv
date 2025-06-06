@@ -132,9 +132,12 @@ module cpu(
             id_ex_reg_next.control = decode_control;
             id_ex_reg_next.decpompress_failed = if_id_reg.decpompress_failed;
             id_ex_reg_next.instruction_illegal = decode_instruction_illegal;
-        end
-        else if(id_ex_flush) begin
-            id_ex_reg_next = '0;
+
+            if (id_ex_flush)
+                id_ex_reg_next = '0;
+        // end
+        // else if(id_ex_flush) begin
+        //     id_ex_reg_next = '0;
             //id_ex_reg_next.reg_rs1_id = '0;
             //id_ex_reg_next.reg_rs2_id = '0;
             //id_ex_reg_next.reg_rd_id = '0;
