@@ -3,7 +3,7 @@ import time
 import os
 
 def read_and_rearrange(file_path):
-    """读取文件并解析十六进制字符串为字节数据"""
+    """Read file and parse hexadecimal strings to byte data"""
     with open(file_path, 'r') as f:
         lines = f.readlines()
 
@@ -13,16 +13,16 @@ def read_and_rearrange(file_path):
         try:
             byte_line = [int(h, 16) for h in hex_list]
             if len(byte_line) not in [2, 4]:
-                raise ValueError(f"行长度不为2或4个字节: {line.strip()}")
+                raise ValueError(f"Line length is not 2 or 4 bytes: {line.strip()}")
             byte_data.append(byte_line)
         except ValueError:
-            raise ValueError(f"文件中包含非合法十六进制或格式错误：{line.strip()}")
+            raise ValueError(f"File contains invalid hex or format error: {line.strip()}")
         
     byte_data.append([0x11, 0x11])
     
     
     """
-    将数据重排为每行4字节
+    Rearrange data to 4 bytes per line
     """
     result = []
     temp = [0x00, 0x00, 0x00, 0x00]
@@ -62,29 +62,29 @@ def read_and_rearrange(file_path):
     return result
 
 def write_rearranged_file(file_path, rearranged_data):
-    """写入重新排列的数据，每行4个字节"""
+    """Write rearranged data, 4 bytes per line"""
     with open(file_path, 'w') as f:
         for row in rearranged_data:
             hex_str = ' '.join(f"{b:02X}" for b in row)
             f.write(hex_str + '\n')
 
 def send_uart_data(port, baudrate, data, byte_interval=0):
-    """通过串口逐字节发送数据"""
+    """Send data byte by byte through UART"""
     try:
         with serial.Serial(port, baudrate=baudrate, bytesize=serial.EIGHTBITS,
                            parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                            timeout=1) as ser:
             for i, byte in enumerate(data):
                 ser.write(bytes([byte]))
-                print(f"已发送字节 {i+1}/{len(data)}: 0x{byte:02X}")
+                print(f"Sent byte {i+1}/{len(data)}: 0x{byte:02X}")
                 time.sleep(byte_interval)
-            print(f"全部数据发送完毕，总共 {len(data)} 字节。")
+            print(f"All data sent successfully, total {len(data)} bytes.")
     except serial.SerialException as e:
-        print(f"串口通信错误：{e}")
+        print(f"Serial communication error: {e}")
 
 if __name__ == "__main__":
-    file_path = "D:\ETIN35-ICp1\Phase2\data.txt"
-    serial_port = "COM10"
+    file_path = r"D:\UNI2\ICP1\RISC-V\SystemVerilog\Simulation\test7.txt"
+    serial_port = "COM4"
     baudrate = 115200
     byte_interval = 0.1
 
@@ -93,10 +93,10 @@ if __name__ == "__main__":
 
         rearranged_file_path = os.path.join(os.path.dirname(file_path), "data_rearranged.txt")
         write_rearranged_file(rearranged_file_path, data)
-        print(f"数据已重新排列并写入: {rearranged_file_path}")
+        print(f"Data has been rearranged and written to: {rearranged_file_path}")
 
-        #flat_data = [b for row in data for b in row]
-        #send_uart_data(serial_port, baudrate, flat_data, byte_interval)
+        flat_data = [b for row in data for b in row]
+        send_uart_data(serial_port, baudrate, flat_data, byte_interval)
 
     except Exception as e:
-        print(f"错误：{e}")
+        print(f"Error: {e}")
