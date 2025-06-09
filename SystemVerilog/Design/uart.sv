@@ -9,10 +9,10 @@ module uart(
     output logic [7:0] io_data_packet 
 );
 
-    parameter BAUD = 115200;
-    localparam FREQUENCY_IN_HZ = 40_000_000;
+    parameter BAUD = 46080;
+    localparam FREQUENCY_IN_HZ = 40_000_000; // periods per second
     localparam BAUD_COUNT_CHECK = FREQUENCY_IN_HZ / BAUD;
-    localparam NUM_DATA_BITS = 8;  
+    localparam NUM_DATA_BITS = 8;
 
     typedef enum {standby, wait_half_start_bit, wait_full_data_bit, capture_data_bit, wait_full_last_bit} uart_state_type;
     uart_state_type uart_state, uart_state_next;
@@ -23,6 +23,8 @@ module uart(
     logic [7:0] data_packet_reg, data_packet_next;
     
     logic data_valid_next;
+
+    logic io_rx_delay1, io_rx_delay2;
     
     always_ff @ (posedge clk)
     begin
@@ -32,13 +34,17 @@ module uart(
             data_bit_count_reg <= 0;
             io_data_valid <= 0;            
             data_packet_reg <= 0;
+            io_rx_delay1 <= 0;
+            io_rx_delay2 <= 0;
         end 
         else begin
             uart_state <= uart_state_next;            
             uart_counter_reg <= uart_counter_next;
             data_bit_count_reg <= data_bit_count_next;
             io_data_valid <= data_valid_next;   
-            data_packet_reg <= data_packet_next;        
+            data_packet_reg <= data_packet_next;
+            io_rx_delay1 <= io_rx;
+            io_rx_delay2 <= io_rx_delay1;
         end
     end 
         
@@ -53,7 +59,7 @@ module uart(
         
         case (uart_state)
             standby:
-                if (io_rx == 0) begin
+                if (io_rx_delay2 == 0) begin
                     uart_state_next <= wait_half_start_bit;
                 end                        
             
@@ -77,7 +83,7 @@ module uart(
                 
             capture_data_bit: 
             begin
-                data_packet_next <= {io_rx, data_packet_reg[NUM_DATA_BITS-1:1]};
+                data_packet_next <= {io_rx_delay2, data_packet_reg[NUM_DATA_BITS-1:1]};
                 data_bit_count_next <= data_bit_count_reg + 1;
                 uart_state_next <= (data_bit_count_reg == NUM_DATA_BITS-1) ? wait_full_last_bit : wait_full_data_bit;
             end    
