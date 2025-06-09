@@ -9,8 +9,8 @@ module uart(
     output logic [7:0] io_data_packet 
 );
 
-    parameter BAUD = 46080;
-    localparam FREQUENCY_IN_HZ = 40_000_000; // periods per second
+    parameter BAUD = 23040;
+    localparam FREQUENCY_IN_HZ = 20_000_000; // periods per second
     localparam BAUD_COUNT_CHECK = FREQUENCY_IN_HZ / BAUD;
     localparam NUM_DATA_BITS = 8;
 
@@ -23,8 +23,6 @@ module uart(
     logic [7:0] data_packet_reg, data_packet_next;
     
     logic data_valid_next;
-
-    logic io_rx_delay1, io_rx_delay2;
     
     always_ff @ (posedge clk)
     begin
@@ -34,8 +32,6 @@ module uart(
             data_bit_count_reg <= 0;
             io_data_valid <= 0;            
             data_packet_reg <= 0;
-            io_rx_delay1 <= 0;
-            io_rx_delay2 <= 0;
         end 
         else begin
             uart_state <= uart_state_next;            
@@ -43,59 +39,57 @@ module uart(
             data_bit_count_reg <= data_bit_count_next;
             io_data_valid <= data_valid_next;   
             data_packet_reg <= data_packet_next;
-            io_rx_delay1 <= io_rx;
-            io_rx_delay2 <= io_rx_delay1;
         end
     end 
         
     
     always_comb
     begin
-        uart_state_next <= uart_state;
-        uart_counter_next <= uart_counter_reg;
-        data_packet_next <= data_packet_reg;
-        data_bit_count_next <= data_bit_count_reg;
-        data_valid_next <= 0;
+        uart_state_next = uart_state;
+        uart_counter_next = uart_counter_reg;
+        data_packet_next = data_packet_reg;
+        data_bit_count_next = data_bit_count_reg;
+        data_valid_next = 0;
         
         case (uart_state)
             standby:
-                if (io_rx_delay2 == 0) begin
-                    uart_state_next <= wait_half_start_bit;
+                if (io_rx == 0) begin
+                    uart_state_next = wait_half_start_bit;
                 end                        
             
             wait_half_start_bit: 
             begin
-                uart_counter_next <= uart_counter_reg + 1;
+                uart_counter_next = uart_counter_reg + 1;
                 if (uart_counter_reg == BAUD_COUNT_CHECK/2) begin
-                    uart_counter_next <= 0;
-                    uart_state_next <= wait_full_data_bit;
+                    uart_counter_next = 0;
+                    uart_state_next = wait_full_data_bit;
                 end
             end
                 
             wait_full_data_bit: 
             begin
-                uart_counter_next <= uart_counter_reg + 1; 
+                uart_counter_next = uart_counter_reg + 1; 
                 if (uart_counter_reg == BAUD_COUNT_CHECK) begin
-                    uart_counter_next <= 0;
-                    uart_state_next <= capture_data_bit;
+                    uart_counter_next = 0;
+                    uart_state_next = capture_data_bit;
                 end 
             end
                 
             capture_data_bit: 
             begin
-                data_packet_next <= {io_rx_delay2, data_packet_reg[NUM_DATA_BITS-1:1]};
-                data_bit_count_next <= data_bit_count_reg + 1;
-                uart_state_next <= (data_bit_count_reg == NUM_DATA_BITS-1) ? wait_full_last_bit : wait_full_data_bit;
+                data_packet_next = {io_rx, data_packet_reg[NUM_DATA_BITS-1:1]};
+                data_bit_count_next = data_bit_count_reg + 1;
+                uart_state_next = (data_bit_count_reg == NUM_DATA_BITS-1) ? wait_full_last_bit : wait_full_data_bit;
             end    
             
             wait_full_last_bit:
             begin
-                uart_counter_next <= uart_counter_reg + 1; 
+                uart_counter_next = uart_counter_reg + 1; 
                 if (uart_counter_reg == BAUD_COUNT_CHECK) begin
-                    uart_state_next <= standby;
-                    data_bit_count_next <= 0;
-                    uart_counter_next <= 0; 
-                    data_valid_next <= 1;         
+                    uart_state_next = standby;
+                    data_bit_count_next = 0;
+                    uart_counter_next = 0; 
+                    data_valid_next = 1;         
                 end 
             end                             
         endcase
