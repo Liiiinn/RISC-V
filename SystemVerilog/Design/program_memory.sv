@@ -17,7 +17,7 @@ module program_memory (
     assign word_address = byte_address[9:2];
     
     
-    //initial begin
+    // initial begin
         // $readmemb("instruction_mem.mem", ram);  the reading process is not functional
         // test for LW,ADD instructions, temporarily
         // ram[0] = 32'b00000000001100000000000110000011; // LW x1, 3(x0)
@@ -228,7 +228,7 @@ module program_memory (
         // ram[39] = 32'h0000_0013; // 0000_0000_0000_0000_0000_0000_0001_0011
 
 
-    //end
+    // end
     
     
     always @(posedge clk) begin

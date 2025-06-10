@@ -50,9 +50,16 @@ module uart(
         data_packet_next = data_packet_reg;
         data_bit_count_next = data_bit_count_reg;
         data_valid_next = 0;
+        uart_state_next = uart_state;
+        uart_counter_next = uart_counter_reg;
+        data_packet_next = data_packet_reg;
+        data_bit_count_next = data_bit_count_reg;
+        data_valid_next = 0;
         
         case (uart_state)
             standby:
+                if (io_rx_delay2 == 0) begin
+                    uart_state_next = wait_half_start_bit;
                 if (io_rx == 0) begin
                     uart_state_next = wait_half_start_bit;
                 end                        
@@ -60,7 +67,10 @@ module uart(
             wait_half_start_bit: 
             begin
                 uart_counter_next = uart_counter_reg + 1;
+                uart_counter_next = uart_counter_reg + 1;
                 if (uart_counter_reg == BAUD_COUNT_CHECK/2) begin
+                    uart_counter_next = 0;
+                    uart_state_next = wait_full_data_bit;
                     uart_counter_next = 0;
                     uart_state_next = wait_full_data_bit;
                 end
@@ -69,7 +79,10 @@ module uart(
             wait_full_data_bit: 
             begin
                 uart_counter_next = uart_counter_reg + 1; 
+                uart_counter_next = uart_counter_reg + 1; 
                 if (uart_counter_reg == BAUD_COUNT_CHECK) begin
+                    uart_counter_next = 0;
+                    uart_state_next = capture_data_bit;
                     uart_counter_next = 0;
                     uart_state_next = capture_data_bit;
                 end 
@@ -77,6 +90,9 @@ module uart(
                 
             capture_data_bit: 
             begin
+                data_packet_next = {io_rx_delay2, data_packet_reg[NUM_DATA_BITS-1:1]};
+                data_bit_count_next = data_bit_count_reg + 1;
+                uart_state_next = (data_bit_count_reg == NUM_DATA_BITS-1) ? wait_full_last_bit : wait_full_data_bit;
                 data_packet_next = {io_rx, data_packet_reg[NUM_DATA_BITS-1:1]};
                 data_bit_count_next = data_bit_count_reg + 1;
                 uart_state_next = (data_bit_count_reg == NUM_DATA_BITS-1) ? wait_full_last_bit : wait_full_data_bit;
@@ -85,7 +101,12 @@ module uart(
             wait_full_last_bit:
             begin
                 uart_counter_next = uart_counter_reg + 1; 
+                uart_counter_next = uart_counter_reg + 1; 
                 if (uart_counter_reg == BAUD_COUNT_CHECK) begin
+                    uart_state_next = standby;
+                    data_bit_count_next = 0;
+                    uart_counter_next = 0; 
+                    data_valid_next = 1;         
                     uart_state_next = standby;
                     data_bit_count_next = 0;
                     uart_counter_next = 0; 

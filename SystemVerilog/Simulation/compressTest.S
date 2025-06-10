@@ -21,11 +21,11 @@
 TEST 3
     lui x20, 0xfedcc      # x20 = 0xfedcc000 = -19087360
     addi x20, x20, 0x000  # 
-    addi x20, x20, -1384  # x20 = -19088744
+    addi x20, x20, -1384  # x20 = 0xfedcba98 = -19088744
 
     addi x21, x21, 6      # x21 = x21 + 6 (assuming x21 was 0, x21 = 6)
-    add x22, x21, x20     # x22 = 6 + (-19137896) = -19137890
-    sub x23, x20, x22     # x23 = -19137896 - (-19137890) = -6
+    add x22, x21, x20     # x22 = 0xfedcba9e = -19088738
+    sub x23, x20, x22     # x23 = 0xfffffffa = -6
     add x24, x23, x0      # x24 = -6 + 0 = -6
     sub x24, x0, x24      # x24 = 0 - (-6) = 6
 
@@ -111,6 +111,7 @@ TEST 6
     addi x14, x0, 0     # x14 = 0
     c.li x15, 1         # x15 = 1
     addi x16, x0, 1     # x16 = 1
+    c.nop
 
 stroe_loop:
     addi x12, x12, 1    # x12 = x12 + 1 (counter)
@@ -148,7 +149,7 @@ TEST 7
     c.sub x9, x10       # x9 = -9
 
     c.slli x10, 1       # x10 = x10 << 1 = 15 << 1 = 30
-    c.srli x9, 1        # x9 = x9 >> 1 = -9 >> 1 = 0x7FFFFFF8 (logical right shift by 1 bit, unsigned)
+    c.srli x9, 1        # x9 = x9 >> 1 = -9 >> 1 = 0x7FFFFFFb (logical right shift by 1 bit, unsigned)
                         # Note: -9 in binary is 0xFFFFFFF7, right shift by 1 bit becomes 0x7FFFFFFb = 2147483643
 
     c.li x15, 0         # x15 = 0

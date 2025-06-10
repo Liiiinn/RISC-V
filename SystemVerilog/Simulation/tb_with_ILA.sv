@@ -25,7 +25,7 @@ module tb_with_uart();
     logic indication;
     logic [7:0] byte_now;
 
-    parameter BAUD = 115200;  // bits per second
+    parameter BAUD = 46080;  // bits per second
     localparam FREQUENCY_IN_HZ = 40_000_000; //periods per second
     localparam BAUD_COUNT_CHECK = FREQUENCY_IN_HZ / BAUD * 25; // periods per bit
 
@@ -70,7 +70,7 @@ module tb_with_uart();
         #100;
 
         // 打开文件
-        fd = $fopen("D:\\UNI2\\ICP1\\RISC-V\\SystemVerilog\\Simulation\\test8.txt", "r");
+        fd = $fopen("D:\\UNI2\\ICP1\\RISC-V\\SystemVerilog\\Simulation\\test3.txt", "r");
         if (fd == 0) begin
             $display("ERROR: Cannot open file 'data.txt'");
             $finish;

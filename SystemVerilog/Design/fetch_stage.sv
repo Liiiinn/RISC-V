@@ -306,7 +306,7 @@ module fetch_stage(
                 8'b01??????: pc_next = jalr_target_offset;
                 8'b001?????: begin
                     pc_next = 32'd0; // end instruction
-                    run_finished_next = 1'b1;
+                    run_finished_next = 1'b1; //TODO
                 end
                 8'b0001????: pc_next = pc_recovery_next;
                 8'b00001???: pc_next = pc_mispred1;

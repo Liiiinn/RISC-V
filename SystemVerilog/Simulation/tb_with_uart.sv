@@ -63,7 +63,7 @@ module tb_with_uart();
         #100;
 
         // 打开文件
-        fd = $fopen("D:/ETIN35-ICp1/Phase2/data_rearranged.txt", "r");
+        fd = $fopen("D:\\UNI2\\ICP1\\RISC-V\\SystemVerilog\\Simulation\\test2.txt", "r");
         if (fd == 0) begin
             $display("ERROR: Cannot open file 'data.txt'");
             $finish;

@@ -83,19 +83,20 @@ def send_uart_data(port, baudrate, data, byte_interval=0):
         print(f"Serial communication error: {e}")
 
 if __name__ == "__main__":
-    file_path = r"D:\UNI2\ICP1\RISC-V\SystemVerilog\Simulation\test7.txt"
+    file_path = r"D:\UNI2\ICP1\RISC-V\SystemVerilog\Simulation\test8.txt"
     serial_port = "COM4"
     baudrate = 115200
     byte_interval = 0.1
 
     try:
         data = read_and_rearrange(file_path)
+        data1 = read_and_rearrange(file_path)
 
         rearranged_file_path = os.path.join(os.path.dirname(file_path), "data_rearranged.txt")
         write_rearranged_file(rearranged_file_path, data)
         print(f"Data has been rearranged and written to: {rearranged_file_path}")
 
-        flat_data = [b for row in data for b in row]
+        flat_data = [b for row in data1 for b in row]
         send_uart_data(serial_port, baudrate, flat_data, byte_interval)
 
     except Exception as e:
