@@ -11,6 +11,7 @@ module fetch_stage(
     input prediction,
     input [31:0] jalr_target_offset,
     input jalr_flag,
+    input [31:0] exe_pc_in,
     input run_flag,
     output logic [31:0] address,
     output logic [31:0] pc_out,
@@ -263,7 +264,8 @@ module fetch_stage(
 
         // PC recovery
         if (instr_type == B_TYPE)
-            pc_recovery_next = pc_reg + (is_compressed ? 32'd2 : 32'd4);
+            // pc_recovery_next = pc_reg + (is_compressed ? 32'd2 : 32'd4);
+            pc_recovery_next = exe_pc_in + (is_compressed ? 32'd2 : 32'd4);
         else
             pc_recovery_next = pc_recovery;
 

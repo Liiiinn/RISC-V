@@ -228,6 +228,7 @@ module cpu(
         .prediction(fetch_prediction),
         .jalr_target_offset(execute_jalr_target_offset),
         .jalr_flag(execute_jalr_flag),
+        .exe_pc_in(execute_pc_out),
         .run_flag(run_flag),
         // .current_word(program_mem_current_data),
         // .next_word(program_mem_next_data),
