@@ -69,7 +69,7 @@ module uart_wrapper (
                     byte_address_next = byte_address + 1;
                 end
 
-                if (byte_counter == 3) begin
+                if (byte_counter == 2'b10) begin
                     data_valid_next = 1;
                 end
             end
