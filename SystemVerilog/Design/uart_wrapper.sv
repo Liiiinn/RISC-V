@@ -25,8 +25,8 @@ module uart_wrapper (
 
     logic [1:0] byte_counter;
     logic [1:0] byte_counter_next;
-    logic en_byte_count; // redundant?
-    logic en_byte_count_next;
+    // logic en_byte_count;
+    // logic en_byte_count_next;
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
@@ -35,7 +35,7 @@ module uart_wrapper (
             data_valid <= 0;
             en_address_increment <= 0;
             io_data_valid_delayed <= 0;  //avoid timing issues
-            en_byte_count <= 0;
+            // en_byte_count <= 0;
             io_rx_delay1 <= 0;
             io_rx_delay2 <= 0;
         end
@@ -45,7 +45,7 @@ module uart_wrapper (
             data_valid <= data_valid_next;
             en_address_increment <= en_address_increment_next;
             io_data_valid_delayed <= io_data_valid;
-            en_byte_count <= en_byte_count_next;
+            // en_byte_count <= en_byte_count_next;
             io_rx_delay1 <= io_rx;
             io_rx_delay2 <= io_rx_delay1;
         end
