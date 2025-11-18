@@ -25,7 +25,7 @@ module uart_wrapper (
 
     logic [1:0] byte_counter;
     logic [1:0] byte_counter_next;
-    logic en_byte_count;
+    logic en_byte_count; // redundant?
     logic en_byte_count_next;
 
     always_ff @(posedge clk or negedge reset_n) begin
@@ -52,36 +52,27 @@ module uart_wrapper (
     end
 
     always_comb begin
-        byte_address_next = byte_address;
-        byte_counter_next = byte_counter;
-        en_address_increment_next = en_address_increment;
         data_valid_next = 0;
-        en_byte_count_next = en_byte_count;
+        byte_counter_next = byte_counter;
 
-        if(en_byte_count) begin
-            if (io_data_valid_delayed) begin
-                byte_counter_next = byte_counter + 1;
-                en_address_increment_next = 1;
-            end
-
-            if (io_data_valid) begin
-                if (en_address_increment) begin
-                    byte_address_next = byte_address + 1;
-                end
-
-                if (byte_counter == 2'b10) begin
-                    data_valid_next = 1;
-                end
-            end
-
-            if (data_out[15:0] == 16'h1111 || data_out[31:16] == 16'h1111) begin
-                en_address_increment_next = 0;
+        if (io_data_valid) begin
+            byte_counter_next = byte_counter + 1;
+            if (byte_counter == 2'b11) begin
+                data_valid_next = 1;
             end
         end
-        else begin
-            if (io_data_valid_delayed) begin
-                en_byte_count_next = 1;
-            end
+    end
+
+    always_comb begin
+        byte_address_next = byte_address;
+        en_address_increment_next = en_address_increment;
+
+        if (data_valid) begin
+            en_address_increment_next = 1;
+        end
+
+        if (io_data_valid && en_address_increment) begin
+            byte_address_next = byte_address + 1;
         end
     end
 
