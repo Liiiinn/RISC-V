@@ -224,6 +224,7 @@ module cpu(
         .data(program_mem_read_data),
         // .data(if_id_reg_next.instruction),
         .pc_src(pc_src),
+        .exe_isbranch(execute_control.is_branch)
         .pc_write(pc_write),
         .prediction(fetch_prediction),
         .jalr_target_offset(execute_jalr_target_offset),

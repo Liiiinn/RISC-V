@@ -12,6 +12,7 @@ module fetch_stage(
     input [31:0] jalr_target_offset,
     input jalr_flag,
     input [31:0] exe_pc_in,
+    input exe_isbranch,
     input run_flag,
     output logic [31:0] address,
     output logic [31:0] pc_out,
@@ -79,7 +80,8 @@ module fetch_stage(
             buffer_valid <= 1'b0;
             instr_offset <= '0;
             offset_cnt <= 2'd0;
-
+            is_compressed_buffer0 <= 1'b0;
+            is_compressed_buffer1 <= 1'b0;
             run_finished <= 1'b0;
         end
         else begin
@@ -99,6 +101,8 @@ module fetch_stage(
             buffer_valid <= buffer_valid_next;
             instr_offset <= instr_offset_next;
             offset_cnt <= offset_cnt_next;
+            is_compressed_buffer0 <= is_compressed;
+            is_compressed_buffer1 <= is_compressed_buffer1;
 
             run_finished <= run_finished_next;
         end
@@ -263,9 +267,9 @@ module fetch_stage(
             pc_buff0_next = 0;
 
         // PC recovery
-        if (instr_type == B_TYPE)
+        if (exe_isbranch && pc_src != 1'b1) // from exe stage, need buffer for all signals to keep alignment
             // pc_recovery_next = pc_reg + (is_compressed ? 32'd2 : 32'd4);
-            pc_recovery_next = exe_pc_in + (is_compressed ? 32'd2 : 32'd4);
+            pc_recovery_next = exe_pc_in + (is_compressed_buffer1 ? 32'd2 : 32'd4);
         else
             pc_recovery_next = pc_recovery;
 
