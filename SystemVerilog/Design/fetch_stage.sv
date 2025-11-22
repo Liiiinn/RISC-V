@@ -41,7 +41,7 @@ module fetch_stage(
     logic [15:0] instr_buffer, instr_buffer_next;
     // logic [15:0] instr_recovery, instr_recovery_next;
     logic buffer_valid, buffer_valid_next;
-    logic is_compressed;
+    logic is_compressed, is_compressed_buffer0, is_compressed_buffer1;
     logic [31:0] current_instr;
     logic [31:0] instr_offset, instr_offset_next;
     logic [1:0] offset_cnt, offset_cnt_next;
